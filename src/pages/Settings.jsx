@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import Navbar from '../shared/Navbar';
 import Sidebar from '../shared/Sidebar';
-import { isAuthenticated, getCurrentUser, logout } from '../utils/auth';
+import { isAuthenticated, getCurrentUser, logout, deleteUserAccount } from '../utils/auth';
+import { clearUserReports } from '../utils/reports';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -14,45 +15,34 @@ const Settings = () => {
     return <Navigate to="/login" />;
   }
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      // Remove user from users array
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const filteredUsers = users.filter(u => u.id !== currentUser.id);
-      localStorage.setItem('users', JSON.stringify(filteredUsers));
+      setMessage('Deleting account...');
+      const result = await deleteUserAccount(currentUser.id);
       
-      // Remove user reports
-      const reports = JSON.parse(localStorage.getItem('reports') || '[]');
-      const filteredReports = reports.filter(r => r.userId !== currentUser.id);
-      localStorage.setItem('reports', JSON.stringify(filteredReports));
-      
-      // Logout
-      logout();
-      navigate('/');
+      if (result.success) {
+        alert('Account deleted successfully');
+        navigate('/');
+      } else {
+        setMessage('❌ ' + result.message);
+      }
     }
   };
 
-  const handleClearReports = () => {
+  const handleClearReports = async () => {
     if (window.confirm('Are you sure you want to clear all your reports?')) {
-      const reports = JSON.parse(localStorage.getItem('reports') || '[]');
-      const filteredReports = reports.filter(r => r.userId !== currentUser.id);
-      localStorage.setItem('reports', JSON.stringify(filteredReports));
+      setMessage('Clearing reports...');
+      const result = await clearUserReports(currentUser.id);
       
-      // Update user stats
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const userIndex = users.findIndex(u => u.id === currentUser.id);
-      if (userIndex !== -1) {
-        users[userIndex].reportsSubmitted = 0;
-        users[userIndex].totalEarnings = 0;
-        localStorage.setItem('users', JSON.stringify(users));
-        
-        currentUser.reportsSubmitted = 0;
-        currentUser.totalEarnings = 0;
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      if (result.success) {
+        setMessage('✅ All reports cleared successfully');
+        setTimeout(() => {
+          setMessage('');
+          window.location.reload();
+        }, 2000);
+      } else {
+        setMessage('❌ ' + result.message);
       }
-      
-      setMessage('✅ All reports cleared successfully');
-      setTimeout(() => setMessage(''), 3000);
     }
   };
 

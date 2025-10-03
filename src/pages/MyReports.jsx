@@ -14,11 +14,16 @@ const MyReports = () => {
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
-    if (currentUser) {
-      const userReports = getUserReports(currentUser.id);
-      setReports(userReports.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)));
-      setStats(getReportStats(currentUser.id));
-    }
+    const loadReports = async () => {
+      if (currentUser) {
+        const userReports = await getUserReports(currentUser.id);
+        setReports(userReports.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)));
+        const statsData = await getReportStats(currentUser.id);
+        setStats(statsData);
+      }
+    };
+    
+    loadReports();
   }, [currentUser]);
 
   if (!isAuthenticated()) {

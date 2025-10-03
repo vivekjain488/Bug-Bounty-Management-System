@@ -39,7 +39,7 @@ const CompanyDetail = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!formData.title || !formData.description || !formData.stepsToReproduce) {
@@ -55,7 +55,8 @@ const CompanyDetail = () => {
       companyName: company.name,
     };
 
-    const result = submitReport(reportData);
+    setMessage('Submitting report...');
+    const result = await submitReport(reportData);
     
     if (result.success) {
       setMessage('✅ Report submitted successfully! You can track it in My Reports.');
