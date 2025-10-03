@@ -25,7 +25,7 @@ const Profile = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     
     const updatedData = {
@@ -33,16 +33,14 @@ const Profile = () => {
       skills: formData.skills.split(',').map(s => s.trim()).filter(s => s),
     };
     
-    setMessage('Updating profile...');
-    const result = await updateUserProfile(updatedData);
+    const result = updateUserProfile(updatedData);
     
     if (result.success) {
       setMessage('Profile updated successfully!');
       setIsEditing(false);
-      setTimeout(() => {
-        setMessage('');
-        window.location.reload();
-      }, 2000);
+      setTimeout(() => setMessage(''), 3000);
+      // Reload page to reflect changes
+      window.location.reload();
     } else {
       setMessage(result.message);
     }

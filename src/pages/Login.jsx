@@ -18,7 +18,7 @@ const Login = () => {
     setError('');
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     
     if (!formData.email || !formData.password) {
@@ -26,8 +26,7 @@ const Login = () => {
       return;
     }
 
-    setError('Logging in...');
-    const result = await login(formData);
+    const result = login(formData);
     
     if (result.success) {
       navigate('/dashboard');

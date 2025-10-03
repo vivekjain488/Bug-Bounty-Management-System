@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import Navbar from '../shared/Navbar';
 import Sidebar from '../shared/Sidebar';
-import { isAuthenticated, getCurrentUser, logout, deleteUserAccount } from '../utils/auth';
-import { clearUserReports } from '../utils/reports';
+import { isAuthenticated, getCurrentUser, logout } from '../utils/auth';
 
 const Settings = () => {
   const navigate = useNavigate();

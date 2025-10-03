@@ -21,7 +21,7 @@ const Signup = () => {
     setError('');
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     
     // Validation
@@ -40,11 +40,9 @@ const Signup = () => {
       return;
     }
 
-    setError('Creating account...');
-    const result = await signup(formData);
+    const result = signup(formData);
     
     if (result.success) {
-      alert('Account created successfully! Please login.');
       navigate('/login');
     } else {
       setError(result.message);
