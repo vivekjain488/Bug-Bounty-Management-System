@@ -98,3 +98,29 @@ export const getReportStats = (userId) => {
   };
 };
 
+export const clearUserReports = (userId) => {
+  const reports = JSON.parse(localStorage.getItem('reports') || '[]');
+  const filteredReports = reports.filter(r => r.userId !== userId);
+  localStorage.setItem('reports', JSON.stringify(filteredReports));
+  
+  // Update user stats
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+  const users = JSON.parse(localStorage.getItem('users') || '[]');
+  
+  if (currentUser) {
+    const userIndex = users.findIndex(u => u.id === currentUser.id);
+    if (userIndex !== -1) {
+      users[userIndex].reportsSubmitted = 0;
+      users[userIndex].totalEarnings = 0;
+      localStorage.setItem('users', JSON.stringify(users));
+      
+      // Update current session
+      currentUser.reportsSubmitted = 0;
+      currentUser.totalEarnings = 0;
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    }
+  }
+  
+  return { success: true, message: 'All reports cleared successfully' };
+};
+
