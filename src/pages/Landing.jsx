@@ -60,6 +60,21 @@ const Landing = () => {
                 Browse Programs
               </Link>
             </div>
+            
+            <div className="hero-login-options">
+              <p className="login-prompt">Already have an account?</p>
+              <div className="login-buttons">
+                <Link to="/login" className="btn btn-secondary">
+                  🔍 Researcher Login
+                </Link>
+                <Link to="/company-login" className="btn btn-secondary">
+                  🏢 Company Login
+                </Link>
+                <Link to="/triage-login" className="btn btn-secondary">
+                  ⚖️ Triage Login
+                </Link>
+              </div>
+            </div>
             <div className="hero-stats">
               <div className="stat-box">
                 <div className="stat-number">$2.5M+</div>

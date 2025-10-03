@@ -1,7 +1,7 @@
-// localStorage-based authentication utilities
+// Multi-role authentication utilities (User, Company, Triage)
 
 export const signup = (userData) => {
-  const { username, email, password, fullName } = userData;
+  const { username, email, password, fullName, role = 'user' } = userData;
   
   // Check if user already exists
   const users = JSON.parse(localStorage.getItem('users') || '[]');
@@ -11,20 +11,46 @@ export const signup = (userData) => {
     return { success: false, message: 'User already exists' };
   }
   
-  // Create new user
-  const newUser = {
+  // Create new user based on role
+  let newUser = {
     id: Date.now().toString(),
     username,
     email,
     password, // In production, hash this!
     fullName,
-    bio: '',
-    skills: [],
-    reportsSubmitted: 0,
-    totalEarnings: 0,
-    rank: 'Beginner',
+    role, // 'user', 'company', 'triage'
     joinedDate: new Date().toISOString(),
   };
+
+  // Add role-specific fields
+  if (role === 'user') {
+    newUser = {
+      ...newUser,
+      bio: '',
+      skills: [],
+      reportsSubmitted: 0,
+      totalEarnings: 0,
+      rank: 'Beginner',
+    };
+  } else if (role === 'company') {
+    newUser = {
+      ...newUser,
+      companyName: userData.companyName || '',
+      industry: userData.industry || '',
+      website: userData.website || '',
+      programsCreated: 0,
+      totalBountyPaid: 0,
+      isVerified: false,
+    };
+  } else if (role === 'triage') {
+    newUser = {
+      ...newUser,
+      department: userData.department || 'Security',
+      reportsReviewed: 0,
+      averageReviewTime: 0,
+      specializations: userData.specializations || [],
+    };
+  }
   
   users.push(newUser);
   localStorage.setItem('users', JSON.stringify(users));
@@ -97,4 +123,40 @@ export const deleteUserAccount = (userId) => {
   
   logout();
   return { success: true, message: 'Account deleted successfully' };
+};
+
+// Role-specific helper functions
+export const isUser = () => {
+  const user = getCurrentUser();
+  return user && user.role === 'user';
+};
+
+export const isCompany = () => {
+  const user = getCurrentUser();
+  return user && user.role === 'company';
+};
+
+export const isTriageTeam = () => {
+  const user = getCurrentUser();
+  return user && user.role === 'triage';
+};
+
+export const getUsersByRole = (role) => {
+  const users = JSON.parse(localStorage.getItem('users') || '[]');
+  return users.filter(user => user.role === role);
+};
+
+export const getRedirectPath = (user) => {
+  if (!user) return '/';
+  
+  switch (user.role) {
+    case 'user':
+      return '/dashboard';
+    case 'company':
+      return '/company-dashboard';
+    case 'triage':
+      return '/triage-dashboard';
+    default:
+      return '/dashboard';
+  }
 };
