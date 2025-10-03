@@ -20,13 +20,18 @@ const ReportCard = ({ report, company }) => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString) return 'Unknown date';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return 'Invalid date';
+    }
   };
 
   return (
@@ -36,28 +41,30 @@ const ReportCard = ({ report, company }) => {
           <span className="company-logo-sm">{company?.logo || '🐛'}</span>
           <span className="company-name-sm">{company?.name || 'Unknown'}</span>
         </div>
-        <span className={`status-badge ${getStatusColor(report.status)}`}>
-          {report.status}
+        <span className={`status-badge ${getStatusColor(report?.status)}`}>
+          {report?.status || 'Unknown'}
         </span>
       </div>
       
-      <h3 className="report-title">{report.title}</h3>
+      <h3 className="report-title">{report?.title || 'Untitled Report'}</h3>
       
       <div className="report-meta">
-        <span className={`severity-badge ${getSeverityColor(report.severity)}`}>
-          {report.severity}
+        <span className={`severity-badge ${getSeverityColor(report?.severity)}`}>
+          {report?.severity || 'Unknown'}
         </span>
-        <span className="report-type">{report.vulnerabilityType}</span>
+        <span className="report-type">{report?.vulnerabilityType || 'Unknown Type'}</span>
       </div>
       
-      <p className="report-description">{report.description.substring(0, 150)}...</p>
+      <p className="report-description">
+        {report?.description ? `${report.description.substring(0, 150)}...` : 'No description available'}
+      </p>
       
       <div className="report-footer">
         <div className="report-date">
           <span className="date-label">Submitted:</span>
-          <span className="date-value">{formatDate(report.submittedAt)}</span>
+          <span className="date-value">{formatDate(report?.submittedAt)}</span>
         </div>
-        {report.reward && (
+        {report?.reward && (
           <div className="report-reward">
             <span className="reward-icon">💰</span>
             <span className="reward-amount">${report.reward.toLocaleString()}</span>
@@ -65,7 +72,7 @@ const ReportCard = ({ report, company }) => {
         )}
       </div>
       
-      {report.feedback && (
+      {report?.feedback && (
         <div className="report-feedback">
           <strong>Feedback:</strong> {report.feedback}
         </div>

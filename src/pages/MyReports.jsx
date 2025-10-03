@@ -12,15 +12,30 @@ const MyReports = () => {
   const [reports, setReports] = useState([]);
   const [stats, setStats] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadReports = async () => {
-      if (currentUser) {
-        const userReports = await getUserReports(currentUser.id);
-        setReports(userReports.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)));
-        const statsData = await getReportStats(currentUser.id);
-        setStats(statsData);
+    const loadReports = () => {
+      if (currentUser && currentUser.id) {
+        try {
+          const userReports = getUserReports(currentUser.id);
+          if (Array.isArray(userReports)) {
+            setReports(userReports.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)));
+          } else {
+            setReports([]);
+          }
+          const statsData = getReportStats(currentUser.id);
+          setStats(statsData || { total: 0, pending: 0, accepted: 0, rejected: 0, inReview: 0 });
+        } catch (error) {
+          console.error('Error loading reports:', error);
+          setReports([]);
+          setStats({ total: 0, pending: 0, accepted: 0, rejected: 0, inReview: 0 });
+        }
+      } else {
+        setReports([]);
+        setStats({ total: 0, pending: 0, accepted: 0, rejected: 0, inReview: 0 });
       }
+      setLoading(false);
     };
     
     loadReports();
@@ -49,6 +64,25 @@ const MyReports = () => {
   };
 
   const filteredReports = getFilteredReports();
+
+  if (loading) {
+    return (
+      <div className="my-reports-page">
+        <Navbar />
+        <div className="dashboard-layout">
+          <Sidebar />
+          <main className="dashboard-main">
+            <div className="reports-container">
+              <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+                <h2>Loading your reports...</h2>
+                <p>Please wait while we fetch your data.</p>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="my-reports-page">
