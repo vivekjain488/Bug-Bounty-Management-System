@@ -15,7 +15,7 @@ const Navbar = () => {
       <div className="navbar-container">
         <Link to={currentUser ? "/dashboard" : "/"} className="navbar-brand">
           <span className="brand-icon">🐛</span>
-          <span className="brand-text">BugHuntr</span>
+          <span className="brand-text">BugFlow</span>
         </Link>
         
         {currentUser ? (

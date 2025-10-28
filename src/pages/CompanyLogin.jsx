@@ -64,7 +64,7 @@ const CompanyLogin = () => {
           <div className="auth-header">
             <Link to="/" className="auth-logo">
               <span className="brand-icon">🐛</span>
-              <span className="brand-text">BugHuntr</span>
+              <span className="brand-text">BugFlow</span>
             </Link>
             <h1 className="auth-title">Company Login</h1>
             <p className="auth-subtitle">Enter your company credentials to access your dashboard</p>

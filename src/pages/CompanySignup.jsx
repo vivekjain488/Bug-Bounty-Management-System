@@ -100,7 +100,7 @@ const CompanySignup = () => {
           <div className="auth-header">
             <Link to="/" className="auth-logo">
               <span className="brand-icon">🐛</span>
-              <span className="brand-text">BugHuntr</span>
+              <span className="brand-text">BugFlow</span>
             </Link>
             <h1 className="auth-title">Company Registration</h1>
             <p className="auth-subtitle">Create your company account to start hosting bug bounty programs</p>

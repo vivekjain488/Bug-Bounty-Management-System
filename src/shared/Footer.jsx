@@ -3,7 +3,7 @@ const Footer = () => {
     <footer className="footer">
       <div className="footer-container">
         <div className="footer-section">
-          <h3 className="footer-title">🐛 BugHuntr</h3>
+          <h3 className="footer-title">🐛 BugFlow</h3>
           <p className="footer-text">
             The future of bug bounty management. Hunt bugs, earn rewards, make the web safer.
           </p>
@@ -40,7 +40,7 @@ const Footer = () => {
       </div>
       
       <div className="footer-bottom">
-        <p>&copy; 2025 BugHuntr. All rights reserved.</p>
+        <p>&copy; 2025 BugFlow. All rights reserved.</p>
       </div>
     </footer>
   );

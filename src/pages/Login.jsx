@@ -68,7 +68,7 @@ const Login = () => {
           subtitle: 'Access your triage dashboard',
           visualTitle: '🔍 Triage Team',
           visualText: 'Review and validate bug reports from security researchers.',
-          placeholder: 'triage@bughuntr.com'
+          placeholder: 'triage@BugFlow.com'
         };
       default:
         return getUserTypeConfig('user');
@@ -98,7 +98,7 @@ const Login = () => {
           <div className="auth-header">
             <Link to="/" className="auth-logo">
               <span className="brand-icon">🐛</span>
-              <span className="brand-text">BugHuntr</span>
+              <span className="brand-text">BugFlow</span>
             </Link>
             
             {/* User Type Toggle */}

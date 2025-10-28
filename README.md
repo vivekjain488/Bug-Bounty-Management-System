@@ -1,4 +1,4 @@
-# 🐛 BugHuntr - Complete Bug Bounty Management System
+# 🐛 BugFlow - Complete Bug Bounty Management System
 
 A fully-featured Bug Bounty Management System built with **Vite + React (JavaScript)** featuring a stunning **light neobrutalism design theme**.
 

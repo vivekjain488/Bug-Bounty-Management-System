@@ -69,7 +69,7 @@ const TriageLogin = () => {
           <div className="auth-header">
             <Link to="/" className="auth-logo">
               <span className="brand-icon">🐛</span>
-              <span className="brand-text">BugHuntr</span>
+              <span className="brand-text">BugFlow</span>
             </Link>
             <h1 className="auth-title">Triage Team Login</h1>
             <p className="auth-subtitle">Access your triage dashboard to review reports</p>
@@ -87,7 +87,7 @@ const TriageLogin = () => {
                 value={formData.email}
                 onChange={handleChange}
                 className="form-input"
-                placeholder="triage@bughuntr.com"
+                placeholder="triage@BugFlow.com"
               />
             </div>
             
