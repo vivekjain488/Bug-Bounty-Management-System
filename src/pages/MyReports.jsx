@@ -15,16 +15,16 @@ const MyReports = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadReports = () => {
-      if (currentUser && currentUser.id) {
+    const loadReports = async () => {
+      if (currentUser && currentUser._id) {
         try {
-          const userReports = getUserReports(currentUser.id);
+          const userReports = await getUserReports();
           if (Array.isArray(userReports)) {
-            setReports(userReports.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)));
+            setReports(userReports.sort((a, b) => new Date(b.submittedAt || b.createdAt) - new Date(a.submittedAt || a.createdAt)));
           } else {
             setReports([]);
           }
-          const statsData = getReportStats(currentUser.id);
+          const statsData = await getReportStats();
           setStats(statsData || { total: 0, pending: 0, accepted: 0, rejected: 0, inReview: 0 });
         } catch (error) {
           console.error('Error loading reports:', error);
@@ -187,7 +187,7 @@ const MyReports = () => {
               <div className="reports-grid">
                 {filteredReports.map(report => {
                   const company = getCompanyById(report.companyId);
-                  return <ReportCard key={report.id} report={report} company={company} />;
+                  return <ReportCard key={report._id || report.id} report={report} company={company} />;
                 })}
               </div>
             ) : (

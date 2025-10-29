@@ -21,24 +21,28 @@ const CompanyDashboard = () => {
     }
   }, [currentUser]);
 
-  const loadCompanyReports = () => {
-    // For demo, we'll show all reports but in real app this would be filtered by company
-    const allReports = getAllReports();
-    setReports(allReports);
-    
-    const totalReports = allReports.length;
-    const pendingReports = allReports.filter(r => r.status === 'Pending Review').length;
-    const acceptedReports = allReports.filter(r => r.status === 'Accepted').length;
-    const totalBountyPaid = allReports
-      .filter(r => r.status === 'Accepted' && r.reward)
-      .reduce((sum, r) => sum + r.reward, 0);
+  const loadCompanyReports = async () => {
+    try {
+      // For demo, we'll show all reports but in real app this would be filtered by company
+      const allReports = await getAllReports();
+      setReports(allReports);
+      
+      const totalReports = allReports.length;
+      const pendingReports = allReports.filter(r => r.status === 'Pending Review').length;
+      const acceptedReports = allReports.filter(r => r.status === 'Accepted').length;
+      const totalBountyPaid = allReports
+        .filter(r => r.status === 'Accepted' && r.reward)
+        .reduce((sum, r) => sum + (r.reward || 0), 0);
 
-    setStats({
-      totalReports,
-      pendingReports,
-      acceptedReports,
-      totalBountyPaid
-    });
+      setStats({
+        totalReports,
+        pendingReports,
+        acceptedReports,
+        totalBountyPaid
+      });
+    } catch (error) {
+      console.error('Error loading reports:', error);
+    }
   };
 
   if (!isCompany()) {

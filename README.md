@@ -1,376 +1,229 @@
-# 🐛 BugFlow - Complete Bug Bounty Management System
+# Bug Bounty Management System
 
-A fully-featured Bug Bounty Management System built with **Vite + React (JavaScript)** featuring a stunning **light neobrutalism design theme**.
+A full-stack bug bounty platform connecting security researchers with companies that need security testing.
 
-## 🎨 Design Theme
+## 🚀 Features
 
-- **Light Neobrutalism**: Bold borders, flat bright colors, big typography, raw grid-based layouts
-- **Color Palette**:
-  - `#b0acb0` - Gray
-  - `#e2dddf` - Light Gray
-  - `#85ebd9` - Teal/Mint
-  - `#3d898d` - Dark Teal
-  - `#2f404d` - Dark Blue
+- **Multi-role System**: Support for Researchers, Companies, and Triage Teams
+- **Bug Report Management**: Submit, track, and review security vulnerabilities
+- **Program Management**: Companies can create and manage bug bounty programs
+- **Reward System**: Automatic tracking of bounties and earnings
+- **Real-time Dashboard**: Track submissions, payments, and statistics
+- **Secure Authentication**: JWT-based authentication with password hashing
 
-## ✨ Complete Features
+## 📁 Project Structure
 
-### 🔐 Authentication System
-- **Signup**: Create new user accounts with validation
-- **Login**: Secure login with email/password
-- **Session Management**: Persistent sessions using localStorage
-- **Protected Routes**: Dashboard, reports, and profile require authentication
+```
+Bug-Bounty-Management-System/
+├── backend/                # Node.js backend API
+│   ├── models/            # MongoDB models
+│   ├── routes/            # API routes
+│   ├── middleware/        # Authentication middleware
+│   └── server.js          # Express server
+├── src/                   # React frontend
+│   ├── pages/            # Page components
+│   ├── shared/           # Shared components
+│   └── utils/            # Utilities and API calls
+└── public/               # Static assets
+```
 
-### 📄 All Pages Implemented
+## 🛠 Tech Stack
 
-1. **Landing Page** (`/`)
-   - Hero section with animated floating cards
-   - Features showcase
-   - Statistics display
-   - Call-to-action buttons
-   - Full responsive footer
+### Frontend
+- React with Vite
+- React Router for navigation
+- Axios for API calls
+- CSS for styling
 
-2. **Login Page** (`/login`)
-   - Beautiful neobrutalist form design
-   - Email and password authentication
-   - Error handling and validation
-   - Link to signup
+### Backend
+- Node.js with Express.js
+- MongoDB with Mongoose
+- JWT for authentication
+- bcryptjs for password hashing
 
-3. **Signup Page** (`/signup`)
-   - Complete registration form
-   - Password confirmation
-   - Validation for all fields
-   - Automatic redirection after signup
+## 📦 Installation
 
-4. **Dashboard** (`/dashboard`)
-   - Browse all bug bounty programs
-   - Real-time search functionality
-   - Filter by severity (Critical, High, Medium, Low)
-   - Filter by bounty range
-   - 12 companies with realistic data
-   - Company cards with quick actions
+### Prerequisites
+- Node.js (v14 or higher)
+- MongoDB (local or Atlas)
+- npm or yarn
 
-5. **Companies Page** (`/companies`)
-   - View all available bug bounty programs
-   - Sort by: Bounty amount, Name, or Industry
-   - Detailed company information
-   - Direct access to report bugs
+### Setup
 
-6. **Company Detail Page** (`/company/:id`)
-   - Complete company profile
-   - Reward structure breakdown
-   - In-scope assets
-   - Out-of-scope items
-   - Program rules and guidelines
-   - **Report Bug Form** with:
-     - Vulnerability type selection
-     - Severity selection
-     - Detailed description fields
-     - Steps to reproduce
-     - Impact assessment
-     - Proof of concept
-     - Target URL
-
-7. **My Reports Page** (`/my-reports`)
-   - View all submitted reports
-   - Filter by status: All, Pending, In Review, Accepted, Rejected
-   - Report statistics dashboard
-   - Report cards with:
-     - Company information
-     - Severity badges
-     - Status tracking
-     - Submission dates
-     - Reward amounts (when applicable)
-   - Empty state with CTA
-
-8. **Profile Page** (`/profile`)
-   - User avatar and information
-   - Editable profile fields (name, bio, skills)
-   - Statistics cards:
-     - Reports submitted
-     - Total earnings
-     - Current rank
-     - Member since date
-   - View and edit mode
-
-9. **Settings Page** (`/settings`)
-   - **Account Tab**: View account information
-   - **Notifications Tab**: Manage notification preferences
-   - **Security Tab**: Password and 2FA settings
-   - **Data & Privacy Tab**: 
-     - View account statistics
-     - Clear all reports
-     - Delete account (with confirmation)
-   - Tabbed interface with sticky navigation
-
-### 🏢 12 Complete Bug Bounty Programs
-
-1. **TechCorp** - Cloud Infrastructure ($100-$15K)
-2. **FinanceHub** - Digital Banking ($500-$50K)
-3. **DataStream** - Analytics Platform ($200-$8K)
-4. **SecureChat** - Encrypted Messaging ($300-$20K)
-5. **ShopNow** - E-commerce ($150-$10K)
-6. **HealthVault** - Healthcare Records ($1K-$25K)
-7. **EduLearn** - Online Education ($100-$5K)
-8. **GameZone** - Gaming Platform ($200-$12K)
-9. **TravelNow** - Travel Booking ($150-$8K)
-10. **CloudStore** - Cloud Storage ($300-$18K)
-11. **SocialConnect** - Social Network ($500-$30K)
-12. **DevTools Pro** - Developer Tools ($250-$10K)
-
-Each company includes:
-- Complete "About" section
-- Detailed reward structure
-- In-scope and out-of-scope assets
-- Program rules and guidelines
-- Industry tags and severity ratings
-
-### 🐛 Bug Reporting System
-
-- **Submit Reports**: Complete bug submission form with validation
-- **Track Reports**: View all your submitted reports
-- **Status Updates**: Pending Review → In Review → Accepted/Rejected
-- **Rewards Tracking**: See bounties earned on accepted reports
-- **Statistics**: Track your performance with detailed stats
-- **localStorage Based**: All reports persist in browser storage
-
-### 🎯 Components
-
-#### Shared Components
-- **Navbar**: Brand logo, user info, logout button
-- **Sidebar**: Navigation menu with active states
-- **Footer**: Links, social media, legal information
-- **CompanyCard**: Display company with bounty info
-- **ReportCard**: Display submitted reports with status
-
-#### Utilities
-- **auth.js**: Authentication functions (signup, login, logout, getCurrentUser)
-- **reports.js**: Report management (submit, get, update, delete reports)
-- **mockData.js**: 12 companies with complete information
-
-## 🚀 Getting Started
-
-### Installation
-
+1. **Clone the repository**
 ```bash
-# Install dependencies
+git clone <repository-url>
+cd Bug-Bounty-Management-System
+```
+
+2. **Install frontend dependencies**
+```bash
 npm install
+```
 
-# Start development server
+3. **Install backend dependencies**
+```bash
+cd backend
+npm install
+```
+
+4. **Configure environment variables**
+
+Create `backend/.env`:
+```env
+PORT=3000
+MONGODB_URI=mongodb://localhost:27017/bug-bounty-management
+JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
+NODE_ENV=development
+```
+
+Create `src/.env` (or add to root `.env`):
+```env
+VITE_API_URL=http://localhost:3000/api
+```
+
+5. **Start MongoDB**
+```bash
+# For local MongoDB
+mongod
+
+# Or use MongoDB Atlas (cloud)
+```
+
+6. **Start the backend server**
+```bash
+cd backend
 npm run dev
+```
 
-# Build for production
+7. **Start the frontend** (in a new terminal)
+```bash
+npm run dev
+```
+
+The application will be available at:
+- Frontend: `http://localhost:5173`
+- Backend API: `http://localhost:3000/api`
+
+## 👥 User Roles
+
+### 🔍 Researcher
+- Browse bug bounty programs
+- Submit vulnerability reports
+- Track reports and earnings
+- View profile statistics
+
+### 🏢 Company
+- Create bug bounty programs
+- Manage programs and scope
+- Review submitted reports
+- Track bounty payments
+- View program statistics
+
+### ⚖️ Triage Team
+- Review all reports
+- Validate vulnerabilities
+- Update report status
+- Provide feedback
+
+## 📝 Usage
+
+### Creating an Account
+
+1. Visit the signup page
+2. Select your role (Researcher or Company)
+3. Fill in the registration form
+4. Start using the platform
+
+### Demo Accounts
+
+The backend will automatically create demo accounts on first run (you can seed them):
+
+**Researcher**
+- Email: `demo@researcher.com`
+- Password: `demo123`
+
+**Company**
+- Email: `demo@company.com`
+- Password: `demo123`
+
+**Triage**
+- Email: `demo@triage.com`
+- Password: `demo123`
+
+## 🔒 Security Features
+
+- Password hashing with bcrypt
+- JWT token-based authentication
+- Role-based access control
+- Protected API endpoints
+- Secure session management
+
+## 🧪 Testing
+
+The backend API can be tested using:
+- Postman
+- Thunder Client
+- curl commands
+
+Example API calls are documented in `backend/README.md`
+
+## 📊 Database Schema
+
+### User Model
+- Authentication fields (email, password, username)
+- Role-specific fields based on user type
+- Statistics and profile information
+
+### Report Model
+- Link to user (submitter)
+- Link to company/program
+- Vulnerability details
+- Status and reward tracking
+
+### Program Model
+- Company information
+- Scope and rules
+- Reward structure
+- Statistics
+
+## 🚢 Deployment
+
+### Frontend (Vercel/Netlify)
+```bash
 npm run build
-
-# Preview production build
-npm run preview
+# Deploy the dist/ folder
 ```
 
-### Access the App
+### Backend (Railway/Heroku/Render)
+1. Push to repository
+2. Set environment variables
+3. Start server with `npm start`
 
-Open your browser to: **http://localhost:5173**
+Ensure to:
+- Set production `JWT_SECRET`
+- Use MongoDB Atlas or managed database
+- Configure CORS for your domain
+- Enable HTTPS
 
-## 📖 Usage Guide
+## 📄 License
 
-### 1. Create an Account
-- Click "Sign Up" on the landing page
-- Fill in your details (name, username, email, password)
-- Click "Create Account"
+ISC
 
-### 2. Login
-- Enter your email and password
-- Click "Login" to access the dashboard
+## 🤝 Contributing
 
-### 3. Browse Programs
-- View all companies on the Dashboard
-- Use search to find specific companies
-- Filter by severity or bounty range
-- Sort companies by different criteria
+Contributions welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push and create a pull request
 
-### 4. Submit a Bug Report
-- Click on any company card
-- Click "Report a Bug" button
-- Fill in the complete report form:
-  - Title of the vulnerability
-  - Vulnerability type (XSS, SQLi, CSRF, etc.)
-  - Severity level
-  - Target URL
-  - Detailed description
-  - Steps to reproduce
-  - Impact assessment
-  - Proof of concept
-- Click "Submit Report"
+## 📞 Support
 
-### 5. Track Your Reports
-- Go to "My Reports" in the sidebar
-- View all submitted reports
-- Filter by status
-- See rewards for accepted reports
-
-### 6. Manage Profile
-- Click on your avatar or "Profile" in sidebar
-- View your statistics
-- Click "Edit Profile" to update information
-- Add skills, bio, and personal details
-
-### 7. Customize Settings
-- Go to "Settings" in the sidebar
-- Manage notifications
-- View security settings
-- Access data and privacy controls
-
-## 🎨 Design Features (Neobrutalism)
-
-- ✅ **Thick Black Borders** (4px) on all major elements
-- ✅ **Flat Color Blocks** with no gradients
-- ✅ **Hard Drop Shadows** (offset shadows, no blur)
-- ✅ **Chunky Buttons** with hover/active animations
-- ✅ **Playful Transitions** and micro-interactions
-- ✅ **Bold Typography** - uppercase headers, big fonts
-- ✅ **Raw Grid-Based Layouts** - structured and clean
-- ✅ **Severity Color Coding**:
-  - Critical: Red (#ff6b6b)
-  - High: Orange (#ffa500)
-  - Medium: Yellow (#ffd93d)
-  - Low: Blue (#a8dadc)
-
-## 📁 Complete Project Structure
-
-```
-bugbountymanagementsystem/
-├── src/
-│   ├── pages/
-│   │   ├── Landing.jsx           # Landing page with hero
-│   │   ├── Login.jsx              # Login authentication
-│   │   ├── Signup.jsx             # User registration
-│   │   ├── Dashboard.jsx          # Main dashboard
-│   │   ├── Companies.jsx          # All companies list
-│   │   ├── CompanyDetail.jsx      # Company + report form
-│   │   ├── MyReports.jsx          # User's submitted reports
-│   │   ├── Profile.jsx            # User profile
-│   │   └── Settings.jsx           # Account settings
-│   ├── shared/
-│   │   ├── Navbar.jsx             # Top navigation
-│   │   ├── Sidebar.jsx            # Side menu
-│   │   ├── Footer.jsx             # Footer component
-│   │   ├── CompanyCard.jsx        # Company display card
-│   │   └── ReportCard.jsx         # Report display card
-│   ├── utils/
-│   │   ├── auth.js                # Authentication logic
-│   │   ├── reports.js             # Report management
-│   │   └── mockData.js            # 12 companies data
-│   ├── App.jsx                    # Router configuration
-│   ├── main.jsx                   # Entry point
-│   └── styles.css                 # Complete neobrutalism CSS
-├── public/
-├── index.html
-├── package.json
-├── vite.config.js
-└── README.md
-```
-
-## 🔐 Authentication Flow
-
-1. **Signup**: Creates user in `localStorage.users` array
-2. **Login**: Validates credentials, creates session in `localStorage.currentUser`
-3. **Protected Routes**: Check authentication before rendering pages
-4. **Logout**: Removes session from localStorage
-
-## 🐛 Report Management Flow
-
-1. **Submit Report**: User fills form on company detail page
-2. **Store Report**: Saved to `localStorage.reports` with user ID
-3. **Update Stats**: User's `reportsSubmitted` count increases
-4. **View Reports**: User can see all reports in "My Reports"
-5. **Filter/Sort**: Reports can be filtered by status
-6. **Track Earnings**: Accepted reports show reward amounts
-
-## 🎯 Key Features Highlights
-
-### Search & Filtering
-- Real-time search across company names, industries, and tags
-- Multi-criteria filtering (severity, bounty range)
-- Instant results without page reload
-
-### Report Submission
-- 12+ vulnerability types supported
-- 4 severity levels
-- Comprehensive form validation
-- Success/error feedback
-- Automatic stats updates
-
-### User Experience
-- Smooth animations and transitions
-- Hover effects on interactive elements
-- Responsive design for all devices
-- Loading states and error handling
-- Empty states with helpful CTAs
-
-### Data Persistence
-- All user data saved in localStorage
-- Reports persist across sessions
-- Profile updates saved automatically
-- Statistics calculated in real-time
-
-## 📱 Responsive Design
-
-- **Desktop** (1024px+): Full layout with sidebar
-- **Tablet** (768px-1023px): Adaptive grid layouts
-- **Mobile** (< 768px): Single column, horizontal sidebar
-
-## 🛠️ Tech Stack
-
-- **Frontend**: React 18.2.0
-- **Build Tool**: Vite 5.0.8
-- **Routing**: React Router DOM 6.20.0
-- **Styling**: Pure CSS (Neobrutalism)
-- **Storage**: localStorage (no backend needed)
-- **Language**: JavaScript (ES6+)
-
-## 🎓 Perfect For
-
-- Learning React and Vite
-- Understanding localStorage patterns
-- Studying neobrutalism design
-- Building CRUD applications
-- Portfolio projects
-- Bug bounty platform concepts
-
-## 🚀 Production Ready
-
-- Optimized build with Vite
-- Code splitting for faster loads
-- Responsive on all devices
-- Clean, maintainable code
-- No external dependencies for UI
-- Works offline after first load
-
-## 📊 Statistics Tracking
-
-The app tracks:
-- Total reports submitted
-- Reports by status (pending, review, accepted, rejected)
-- Total earnings from bounties
-- User rank progression
-- Member since date
-- Skills and expertise
-
-## 🎉 Complete & Ready to Use!
-
-This is a **fully functional, production-ready** Bug Bounty Management System with:
-- ✅ All 9 pages implemented
-- ✅ Complete authentication system
-- ✅ 12 realistic bug bounty programs
-- ✅ Full report submission & tracking
-- ✅ User profile management
-- ✅ Settings and preferences
-- ✅ Beautiful neobrutalism design
-- ✅ Fully responsive
-- ✅ localStorage persistence
-
-**No backend required!** Everything works with localStorage for instant setup and testing.
+For issues or questions:
+- Open an issue on GitHub
+- Check the documentation in `backend/README.md`
 
 ---
 
-**Built with ❤️ using Vite + React + Neobrutalism Design**
-
-Start hunting bugs and earning bounties! 🐛💰
+Built with ❤️ for the security community

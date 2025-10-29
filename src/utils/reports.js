@@ -1,126 +1,86 @@
-// Report management utilities using localStorage
+// Report management utilities using API
+import { reportsAPI } from './api.js';
 
-export const submitReport = (reportData) => {
-  const reports = JSON.parse(localStorage.getItem('reports') || '[]');
-  
-  const newReport = {
-    id: Date.now().toString(),
-    ...reportData,
-    submittedAt: new Date().toISOString(),
-    status: 'Pending Review',
-    reward: null,
-    feedback: null,
-  };
-  
-  reports.push(newReport);
-  localStorage.setItem('reports', JSON.stringify(reports));
-  
-  // Update user stats
-  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-  const users = JSON.parse(localStorage.getItem('users') || '[]');
-  
-  if (currentUser) {
-    const userIndex = users.findIndex(u => u.id === currentUser.id);
-    if (userIndex !== -1) {
-      users[userIndex].reportsSubmitted = (users[userIndex].reportsSubmitted || 0) + 1;
-      localStorage.setItem('users', JSON.stringify(users));
-      
-      // Update current session
-      currentUser.reportsSubmitted = users[userIndex].reportsSubmitted;
-      localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    }
+export const submitReport = async (reportData) => {
+  try {
+    return await reportsAPI.submit(reportData);
+  } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Failed to submit report' };
   }
-  
-  return { success: true, message: 'Report submitted successfully', report: newReport };
 };
 
-export const getUserReports = (userId) => {
-  const reports = JSON.parse(localStorage.getItem('reports') || '[]');
-  return reports.filter(report => report.userId === userId);
-};
-
-export const getAllReports = () => {
-  return JSON.parse(localStorage.getItem('reports') || '[]');
-};
-
-export const getReportById = (reportId) => {
-  const reports = JSON.parse(localStorage.getItem('reports') || '[]');
-  return reports.find(report => report.id === reportId);
-};
-
-export const updateReportStatus = (reportId, status, reward = null, feedback = null) => {
-  const reports = JSON.parse(localStorage.getItem('reports') || '[]');
-  const reportIndex = reports.findIndex(r => r.id === reportId);
-  
-  if (reportIndex === -1) {
-    return { success: false, message: 'Report not found' };
+export const getUserReports = async () => {
+  try {
+    const result = await reportsAPI.getAll();
+    return result.success ? result.reports : [];
+  } catch (error) {
+    return [];
   }
-  
-  reports[reportIndex].status = status;
-  if (reward !== null) reports[reportIndex].reward = reward;
-  if (feedback !== null) reports[reportIndex].feedback = feedback;
-  reports[reportIndex].updatedAt = new Date().toISOString();
-  
-  localStorage.setItem('reports', JSON.stringify(reports));
-  
-  // Update user earnings if reward is given
-  if (reward && status === 'Accepted') {
-    const report = reports[reportIndex];
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const userIndex = users.findIndex(u => u.id === report.userId);
-    
-    if (userIndex !== -1) {
-      users[userIndex].totalEarnings = (users[userIndex].totalEarnings || 0) + reward;
-      localStorage.setItem('users', JSON.stringify(users));
-    }
+};
+
+export const getAllReports = async () => {
+  try {
+    const result = await reportsAPI.getAll();
+    return result.success ? result.reports : [];
+  } catch (error) {
+    return [];
   }
-  
-  return { success: true, message: 'Report updated successfully', report: reports[reportIndex] };
 };
 
-export const deleteReport = (reportId) => {
-  const reports = JSON.parse(localStorage.getItem('reports') || '[]');
-  const filteredReports = reports.filter(r => r.id !== reportId);
-  localStorage.setItem('reports', JSON.stringify(filteredReports));
-  
-  return { success: true, message: 'Report deleted successfully' };
-};
-
-export const getReportStats = (userId) => {
-  const reports = getUserReports(userId);
-  
-  return {
-    total: reports.length,
-    pending: reports.filter(r => r.status === 'Pending Review').length,
-    accepted: reports.filter(r => r.status === 'Accepted').length,
-    rejected: reports.filter(r => r.status === 'Rejected').length,
-    inReview: reports.filter(r => r.status === 'In Review').length,
-  };
-};
-
-export const clearUserReports = (userId) => {
-  const reports = JSON.parse(localStorage.getItem('reports') || '[]');
-  const filteredReports = reports.filter(r => r.userId !== userId);
-  localStorage.setItem('reports', JSON.stringify(filteredReports));
-  
-  // Update user stats
-  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-  const users = JSON.parse(localStorage.getItem('users') || '[]');
-  
-  if (currentUser) {
-    const userIndex = users.findIndex(u => u.id === currentUser.id);
-    if (userIndex !== -1) {
-      users[userIndex].reportsSubmitted = 0;
-      users[userIndex].totalEarnings = 0;
-      localStorage.setItem('users', JSON.stringify(users));
-      
-      // Update current session
-      currentUser.reportsSubmitted = 0;
-      currentUser.totalEarnings = 0;
-      localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    }
+export const getReportById = async (reportId) => {
+  try {
+    const result = await reportsAPI.getById(reportId);
+    return result.success ? result.report : null;
+  } catch (error) {
+    return null;
   }
-  
-  return { success: true, message: 'All reports cleared successfully' };
+};
+
+export const updateReportStatus = async (reportId, status, reward = null, feedback = null) => {
+  try {
+    return await reportsAPI.updateStatus(reportId, status, reward, feedback);
+  } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Failed to update report' };
+  }
+};
+
+export const deleteReport = async (reportId) => {
+  try {
+    return await reportsAPI.delete(reportId);
+  } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Failed to delete report' };
+  }
+};
+
+export const getReportStats = async () => {
+  try {
+    const result = await reportsAPI.getStats();
+    return result.success ? result.stats : {
+      total: 0,
+      pending: 0,
+      accepted: 0,
+      rejected: 0,
+      inReview: 0,
+    };
+  } catch (error) {
+    return {
+      total: 0,
+      pending: 0,
+      accepted: 0,
+      rejected: 0,
+      inReview: 0,
+    };
+  }
+};
+
+export const clearUserReports = async () => {
+  try {
+    const reports = await getUserReports();
+    const deletePromises = reports.map(report => deleteReport(report._id));
+    await Promise.all(deletePromises);
+    return { success: true, message: 'All reports cleared successfully' };
+  } catch (error) {
+    return { success: false, message: 'Failed to clear reports' };
+  }
 };
 

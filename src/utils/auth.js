@@ -1,84 +1,24 @@
 // Multi-role authentication utilities (User, Company, Triage)
+import { authAPI } from './api.js';
 
-export const signup = (userData) => {
-  const { username, email, password, fullName, role = 'user' } = userData;
-  
-  // Check if user already exists
-  const users = JSON.parse(localStorage.getItem('users') || '[]');
-  const existingUser = users.find(u => u.email === email || u.username === username);
-  
-  if (existingUser) {
-    return { success: false, message: 'User already exists' };
+export const signup = async (userData) => {
+  try {
+    return await authAPI.signup(userData);
+  } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Signup failed' };
   }
-  
-  // Create new user based on role
-  let newUser = {
-    id: Date.now().toString(),
-    username,
-    email,
-    password, // In production, hash this!
-    fullName,
-    role, // 'user', 'company', 'triage'
-    joinedDate: new Date().toISOString(),
-  };
-
-  // Add role-specific fields
-  if (role === 'user') {
-    newUser = {
-      ...newUser,
-      bio: '',
-      skills: [],
-      reportsSubmitted: 0,
-      totalEarnings: 0,
-      rank: 'Beginner',
-    };
-  } else if (role === 'company') {
-    newUser = {
-      ...newUser,
-      companyName: userData.companyName || '',
-      industry: userData.industry || '',
-      website: userData.website || '',
-      programsCreated: 0,
-      totalBountyPaid: 0,
-      isVerified: false,
-    };
-  } else if (role === 'triage') {
-    newUser = {
-      ...newUser,
-      department: userData.department || 'Security',
-      reportsReviewed: 0,
-      averageReviewTime: 0,
-      specializations: userData.specializations || [],
-    };
-  }
-  
-  users.push(newUser);
-  localStorage.setItem('users', JSON.stringify(users));
-  
-  return { success: true, message: 'Account created successfully', user: newUser };
 };
 
-export const login = (credentials) => {
-  const { email, password } = credentials;
-  const users = JSON.parse(localStorage.getItem('users') || '[]');
-  
-  const user = users.find(u => u.email === email && u.password === password);
-  
-  if (!user) {
-    return { success: false, message: 'Invalid credentials' };
+export const login = async (credentials) => {
+  try {
+    return await authAPI.login(credentials);
+  } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Login failed' };
   }
-  
-  // Set current user session
-  const userSession = { ...user };
-  delete userSession.password; // Don't store password in session
-  localStorage.setItem('currentUser', JSON.stringify(userSession));
-  
-  return { success: true, message: 'Login successful', user: userSession };
 };
 
 export const logout = () => {
-  localStorage.removeItem('currentUser');
-  return { success: true, message: 'Logged out successfully' };
+  return authAPI.logout();
 };
 
 export const getCurrentUser = () => {
@@ -87,42 +27,26 @@ export const getCurrentUser = () => {
 };
 
 export const isAuthenticated = () => {
-  return getCurrentUser() !== null;
+  return getCurrentUser() !== null && localStorage.getItem('token') !== null;
 };
 
-export const updateUserProfile = (updatedData) => {
-  const currentUser = getCurrentUser();
-  if (!currentUser) return { success: false, message: 'Not authenticated' };
-  
-  const users = JSON.parse(localStorage.getItem('users') || '[]');
-  const userIndex = users.findIndex(u => u.id === currentUser.id);
-  
-  if (userIndex === -1) {
-    return { success: false, message: 'User not found' };
+export const updateUserProfile = async (updatedData) => {
+  try {
+    const currentUser = getCurrentUser();
+    if (!currentUser) return { success: false, message: 'Not authenticated' };
+    
+    return await authAPI.updateProfile(updatedData);
+  } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Update failed' };
   }
-  
-  // Update user data
-  users[userIndex] = { ...users[userIndex], ...updatedData };
-  localStorage.setItem('users', JSON.stringify(users));
-  
-  // Update session
-  const updatedUser = { ...users[userIndex] };
-  delete updatedUser.password;
-  localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-  
-  return { success: true, message: 'Profile updated', user: updatedUser };
 };
 
-export const deleteUserAccount = (userId) => {
-  const currentUser = getCurrentUser();
-  if (!currentUser) return { success: false, message: 'Not authenticated' };
-  
-  const users = JSON.parse(localStorage.getItem('users') || '[]');
-  const filteredUsers = users.filter(u => u.id !== userId);
-  localStorage.setItem('users', JSON.stringify(filteredUsers));
-  
-  logout();
-  return { success: true, message: 'Account deleted successfully' };
+export const deleteUserAccount = async (userId) => {
+  try {
+    return await authAPI.deleteAccount();
+  } catch (error) {
+    return { success: false, message: error.response?.data?.message || 'Delete failed' };
+  }
 };
 
 // Role-specific helper functions
@@ -141,9 +65,9 @@ export const isTriageTeam = () => {
   return user && user.role === 'triage';
 };
 
-export const getUsersByRole = (role) => {
-  const users = JSON.parse(localStorage.getItem('users') || '[]');
-  return users.filter(user => user.role === role);
+export const getUsersByRole = async (role) => {
+  // This would need a backend endpoint to fetch users by role
+  return [];
 };
 
 export const getRedirectPath = (user) => {

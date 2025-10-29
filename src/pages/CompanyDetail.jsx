@@ -42,17 +42,24 @@ const CompanyDetail = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.description || !formData.stepsToReproduce) {
-      setMessage('Please fill in all required fields');
+    if (!formData.title || !formData.description || !formData.stepsToReproduce || !formData.impact) {
+      setMessage('Please fill in all required fields (Title, Description, Steps to Reproduce, and Impact)');
       return;
     }
 
+    // Prepare report data - map frontend fields to backend fields
     const reportData = {
-      ...formData,
-      userId: currentUser.id,
-      username: currentUser.username,
-      companyId: company.id,
-      companyName: company.name,
+      title: formData.title,
+      description: formData.description,
+      severity: formData.severity,
+      category: formData.vulnerabilityType, // Map vulnerabilityType to category
+      stepsToReproduce: formData.stepsToReproduce,
+      impact: formData.impact,
+      companyId: company.id.toString(),
+      programId: company.id.toString(), // Use companyId as programId for now (since we're using mock data)
+      // Optional fields
+      tags: formData.targetUrl ? [`Target: ${formData.targetUrl}`] : [],
+      attachments: formData.proofOfConcept ? [formData.proofOfConcept] : [],
     };
 
     setMessage('Submitting report...');
@@ -223,7 +230,7 @@ const CompanyDetail = () => {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Impact</label>
+                    <label className="form-label">Impact *</label>
                     <textarea
                       name="impact"
                       value={formData.impact}
@@ -231,6 +238,7 @@ const CompanyDetail = () => {
                       className="form-textarea"
                       rows="3"
                       placeholder="Describe the potential impact of this vulnerability..."
+                      required
                     />
                   </div>
 
