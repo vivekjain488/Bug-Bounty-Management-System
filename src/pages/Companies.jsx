@@ -7,7 +7,8 @@ import { isAuthenticated } from '../utils/auth';
 import { getAllCompanies } from '../utils/mockData';
 
 const Companies = () => {
-  const [companies, setCompanies] = useState(getAllCompanies());
+  const allCompanies = getAllCompanies();
+  const [companies, setCompanies] = useState(Array.isArray(allCompanies) ? allCompanies : []);
   const [sortBy, setSortBy] = useState('bounty');
 
   if (!isAuthenticated()) {
@@ -18,15 +19,21 @@ const Companies = () => {
     setSortBy(criteria);
     let sorted = [...getAllCompanies()];
     
+    // Ensure sorted is an array
+    if (!Array.isArray(sorted)) {
+      console.error('getAllCompanies did not return an array:', sorted);
+      sorted = [];
+    }
+    
     switch (criteria) {
       case 'bounty':
-        sorted.sort((a, b) => b.maxBounty - a.maxBounty);
+        sorted.sort((a, b) => (b.maxBounty || 0) - (a.maxBounty || 0));
         break;
       case 'name':
-        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
         break;
       case 'industry':
-        sorted.sort((a, b) => a.industry.localeCompare(b.industry));
+        sorted.sort((a, b) => (a.industry || '').localeCompare(b.industry || ''));
         break;
       default:
         break;

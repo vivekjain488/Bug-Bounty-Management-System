@@ -24,6 +24,14 @@ const TriageDashboard = () => {
 
   const loadReports = () => {
     const allReports = getAllReports();
+    
+    // Ensure allReports is an array
+    if (!Array.isArray(allReports)) {
+      console.error('getAllReports did not return an array:', allReports);
+      setReports([]);
+      return;
+    }
+    
     setReports(allReports.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)));
     
     const totalReports = allReports.length;

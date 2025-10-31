@@ -22,6 +22,14 @@ const CompanyReports = () => {
     const userPrograms = getUserPrograms(currentUser.id);
     const programIds = userPrograms.map(p => p.id);
     const allReports = getAllReports();
+    
+    // Ensure allReports is an array
+    if (!Array.isArray(allReports)) {
+      console.error('getAllReports did not return an array:', allReports);
+      setReports([]);
+      return;
+    }
+    
     const companyReports = allReports.filter(r => programIds.includes(r.companyId));
     
     setReports(companyReports.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)));

@@ -26,6 +26,14 @@ const CompanyPayments = () => {
     const userPrograms = getUserPrograms(currentUser.id);
     const programIds = userPrograms.map(p => p.id);
     const allReports = getAllReports();
+    
+    // Ensure allReports is an array
+    if (!Array.isArray(allReports)) {
+      console.error('getAllReports did not return an array:', allReports);
+      setPayments([]);
+      return;
+    }
+    
     const acceptedReports = allReports.filter(r => 
       programIds.includes(r.companyId) && 
       r.status === 'Accepted' && 
