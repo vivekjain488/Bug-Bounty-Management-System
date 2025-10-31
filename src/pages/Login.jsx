@@ -28,7 +28,10 @@ const Login = () => {
     }
 
     setError('Logging in...');
+    console.log('🔐 Attempting login with:', { email: formData.email, userType });
+    
     const result = await login(formData);
+    console.log('📊 Login result:', result);
     
     if (result.success) {
       // Check if the user's role matches the selected type
@@ -37,9 +40,11 @@ const Login = () => {
         return;
       }
       
+      console.log('✅ Login successful, redirecting...');
       const redirectPath = getRedirectPath(result.user);
       navigate(redirectPath);
     } else {
+      console.error('❌ Login failed:', result.message);
       setError(result.message);
     }
   };

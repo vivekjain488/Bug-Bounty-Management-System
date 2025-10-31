@@ -51,10 +51,14 @@ export const authAPI = {
   },
   
   login: async (credentials) => {
+    console.log('🌐 API: Sending login request to backend...', credentials.email);
     const response = await api.post('/auth/login', credentials);
+    console.log('📨 API: Login response received:', response.data);
+    
     if (response.data.success) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('currentUser', JSON.stringify(response.data.user));
+      console.log('💾 API: Token and user saved to localStorage');
     }
     return response.data;
   },

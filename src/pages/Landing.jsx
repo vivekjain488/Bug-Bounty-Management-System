@@ -11,7 +11,7 @@ const Landing = () => {
   ];
 
   const stats = [
-    { value: '$2.5M+', label: 'Total Payouts', icon: '�' },
+    { value: '$2.5M+', label: 'Total Payouts', icon: '💰' },
     { value: '150+', label: 'Active Programs', icon: '🎯' },
     { value: '5000+', label: 'Bugs Found', icon: '🐞' },
     { value: '2400+', label: 'Researchers', icon: '👥' }
@@ -24,7 +24,7 @@ const Landing = () => {
       description: 'Get rewarded quickly for valid vulnerabilities. Average payout time is 7 days.'
     },
     {
-      icon: '�️',
+      icon: '🛡️',
       title: 'Protected Platform',
       description: 'Your submissions are encrypted and handled with military-grade security.'
     },

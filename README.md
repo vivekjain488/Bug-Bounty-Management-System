@@ -137,19 +137,24 @@ The application will be available at:
 
 ### Demo Accounts
 
-The backend will automatically create demo accounts on first run (you can seed them):
+For quick testing, use these hardcoded demo credentials:
 
-**Researcher**
+**🔍 Researcher Account**
 - Email: `demo@researcher.com`
 - Password: `demo123`
+- Features: Submit reports, track earnings, browse programs
 
-**Company**
+**🏢 Company Account**
 - Email: `demo@company.com`
 - Password: `demo123`
+- Features: Create programs, review reports, manage bounties
 
-**Triage**
+**⚖️ Triage Account**
 - Email: `demo@triage.com`
 - Password: `demo123`
+- Features: Review reports, validate vulnerabilities, provide feedback
+
+> **Note**: Demo accounts are automatically created in the database on first login attempt. You can also manually seed them using `npm run seed` in the backend folder.
 
 ## 🔒 Security Features
 

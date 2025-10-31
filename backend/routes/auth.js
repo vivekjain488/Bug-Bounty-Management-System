@@ -77,6 +77,79 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     
+    // Demo credentials hardcoded validation
+    const demoCredentials = {
+      'demo@researcher.com': { password: 'demo123', role: 'user' },
+      'demo@company.com': { password: 'demo123', role: 'company' },
+      'demo@triage.com': { password: 'demo123', role: 'triage' }
+    };
+    
+    // Check if it's a demo account
+    if (demoCredentials[email] && password === demoCredentials[email].password) {
+      // Try to find existing demo user in database
+      let user = await User.findOne({ email });
+      
+      // If demo user doesn't exist in database, create it
+      if (!user) {
+        const demoUserData = {
+          researcher: {
+            username: 'demo_researcher',
+            email: 'demo@researcher.com',
+            password: 'demo123',
+            fullName: 'Alex Hunter',
+            role: 'user',
+            bio: 'Experienced security researcher specializing in web applications',
+            skills: ['XSS', 'SQL Injection', 'CSRF', 'Authentication Bypass'],
+            reportsSubmitted: 12,
+            totalEarnings: 15750,
+            rank: 'Expert'
+          },
+          company: {
+            username: 'demo_company',
+            email: 'demo@company.com',
+            password: 'demo123',
+            fullName: 'Sarah Johnson',
+            role: 'company',
+            companyName: 'DemoTech Solutions',
+            industry: 'Technology',
+            website: 'https://www.demotech.com',
+            programsCreated: 2,
+            totalBountyPaid: 25000,
+            isVerified: true
+          },
+          triage: {
+            username: 'demo_triage',
+            email: 'demo@triage.com',
+            password: 'demo123',
+            fullName: 'Michael Chen',
+            role: 'triage',
+            department: 'Security Review Team',
+            reportsReviewed: 89,
+            averageReviewTime: 1.8,
+            specializations: ['Web Security', 'Mobile Security', 'API Security']
+          }
+        };
+        
+        const accountType = email.includes('researcher') ? 'researcher' : 
+                           email.includes('company') ? 'company' : 'triage';
+        
+        user = new User(demoUserData[accountType]);
+        await user.save();
+        console.log(`✅ Demo ${accountType} account created in database`);
+      }
+      
+      // Generate token
+      const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+      
+      return res.json({
+        success: true,
+        message: 'Login successful (Demo Account)',
+        token,
+        user
+      });
+    }
+    
+    // Regular login for non-demo accounts
     // Find user
     const user = await User.findOne({ email });
     if (!user) {
