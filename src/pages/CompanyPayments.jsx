@@ -8,6 +8,7 @@ import { getUserPrograms } from '../utils/programs';
 const CompanyPayments = () => {
   const currentUser = getCurrentUser();
   const [payments, setPayments] = useState([]);
+  const [reload, setReload] = useState(0);
   const [stats, setStats] = useState({
     totalPaid: 0,
     pendingPayments: 0,
@@ -16,56 +17,64 @@ const CompanyPayments = () => {
   });
 
   useEffect(() => {
+    const loadPayments = async () => {
+      // Get accepted reports that have rewards
+      const userPrograms = await getUserPrograms();
+      
+      // Ensure userPrograms is an array
+      if (!Array.isArray(userPrograms)) {
+        console.error('getUserPrograms did not return an array:', userPrograms);
+        setPayments([]);
+        return;
+      }
+      
+      const programIds = userPrograms.map(p => p.id);
+      const allReports = await getAllReports();
+      
+      // Ensure allReports is an array
+      if (!Array.isArray(allReports)) {
+        console.error('getAllReports did not return an array:', allReports);
+        setPayments([]);
+        return;
+      }
+      
+      const acceptedReports = allReports.filter(r => 
+        programIds.includes(r.companyId) && 
+        r.status === 'Accepted' && 
+        r.reward
+      );
+
+      setPayments(acceptedReports.sort((a, b) => new Date(b.updatedAt || b.submittedAt) - new Date(a.updatedAt || a.submittedAt)));
+
+      // Calculate stats
+      const totalPaid = acceptedReports.reduce((sum, r) => sum + r.reward, 0);
+      const pendingPayments = allReports.filter(r => 
+        programIds.includes(r.companyId) && 
+        r.status === 'Accepted' && 
+        r.reward && 
+        !r.paymentProcessed
+      ).length;
+      
+      const thisMonthStart = new Date();
+      thisMonthStart.setDate(1);
+      const thisMonth = acceptedReports
+        .filter(r => new Date(r.updatedAt || r.submittedAt) >= thisMonthStart)
+        .reduce((sum, r) => sum + r.reward, 0);
+      
+      const averagePayment = acceptedReports.length > 0 ? totalPaid / acceptedReports.length : 0;
+
+      setStats({
+        totalPaid,
+        pendingPayments,
+        thisMonth,
+        averagePayment
+      });
+    };
+
     if (currentUser) {
       loadPayments();
     }
-  }, [currentUser]);
-
-  const loadPayments = () => {
-    // Get accepted reports that have rewards
-    const userPrograms = getUserPrograms(currentUser.id);
-    const programIds = userPrograms.map(p => p.id);
-    const allReports = getAllReports();
-    
-    // Ensure allReports is an array
-    if (!Array.isArray(allReports)) {
-      console.error('getAllReports did not return an array:', allReports);
-      setPayments([]);
-      return;
-    }
-    
-    const acceptedReports = allReports.filter(r => 
-      programIds.includes(r.companyId) && 
-      r.status === 'Accepted' && 
-      r.reward
-    );
-
-    setPayments(acceptedReports.sort((a, b) => new Date(b.updatedAt || b.submittedAt) - new Date(a.updatedAt || a.submittedAt)));
-
-    // Calculate stats
-    const totalPaid = acceptedReports.reduce((sum, r) => sum + r.reward, 0);
-    const pendingPayments = allReports.filter(r => 
-      programIds.includes(r.companyId) && 
-      r.status === 'Accepted' && 
-      r.reward && 
-      !r.paymentProcessed
-    ).length;
-    
-    const thisMonthStart = new Date();
-    thisMonthStart.setDate(1);
-    const thisMonth = acceptedReports
-      .filter(r => new Date(r.updatedAt || r.submittedAt) >= thisMonthStart)
-      .reduce((sum, r) => sum + r.reward, 0);
-    
-    const averagePayment = acceptedReports.length > 0 ? totalPaid / acceptedReports.length : 0;
-
-    setStats({
-      totalPaid,
-      pendingPayments,
-      thisMonth,
-      averagePayment
-    });
-  };
+  }, [reload]);
 
   if (!isCompany()) {
     return <Navigate to="/company-login" />;
@@ -79,7 +88,7 @@ const CompanyPayments = () => {
       reports[reportIndex].paymentProcessed = true;
       reports[reportIndex].paymentDate = new Date().toISOString();
       localStorage.setItem('reports', JSON.stringify(reports));
-      loadPayments(); // Reload data
+      setReload(prev => prev + 1); // Trigger reload
       alert('Payment marked as processed!');
     }
   };
@@ -126,9 +135,9 @@ const CompanyPayments = () => {
                 <h1 className="dashboard-title">Bounty Payments</h1>
                 <p className="dashboard-subtitle">Manage payments to security researchers</p>
               </div>
-              <button className="btn btn-primary" onClick={() => alert('Payment settings coming soon!')}>
+              <Link to="/company-settings" className="btn btn-primary">
                 ⚙️ Payment Settings
-              </button>
+              </Link>
             </div>
 
             {/* Payment Stats */}

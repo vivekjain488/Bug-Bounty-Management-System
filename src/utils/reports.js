@@ -23,6 +23,7 @@ export const getAllReports = async () => {
     const result = await reportsAPI.getAll();
     return result.success ? result.reports : [];
   } catch (error) {
+    console.error('Error fetching reports:', error.message);
     return [];
   }
 };

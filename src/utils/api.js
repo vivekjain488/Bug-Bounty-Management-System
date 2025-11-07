@@ -1,13 +1,19 @@
 import axios from 'axios';
 
+// API Configuration
+// In production, use the Render backend URL
+// In development, use localhost
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
+console.log('🔗 API Base URL:', API_BASE_URL);
 
 // Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  timeout: 30000 // 30 second timeout for slow network
 });
 
 // Add token to requests

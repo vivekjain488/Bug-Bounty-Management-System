@@ -12,47 +12,47 @@ const CompanyReports = () => {
   const [stats, setStats] = useState({});
 
   useEffect(() => {
+    const loadReports = async () => {
+      // Get all reports for this company's programs
+      const userPrograms = await getUserPrograms();
+      const programIds = userPrograms.map(p => p.id);
+      const allReports = await getAllReports();
+      
+      // Ensure allReports is an array
+      if (!Array.isArray(allReports)) {
+        console.error('getAllReports did not return an array:', allReports);
+        setReports([]);
+        return;
+      }
+      
+      const companyReports = allReports.filter(r => programIds.includes(r.companyId));
+      
+      setReports(companyReports.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)));
+      
+      // Calculate stats
+      const totalReports = companyReports.length;
+      const pendingReports = companyReports.filter(r => r.status === 'Pending Review').length;
+      const inReviewReports = companyReports.filter(r => r.status === 'In Review').length;
+      const acceptedReports = companyReports.filter(r => r.status === 'Accepted').length;
+      const rejectedReports = companyReports.filter(r => r.status === 'Rejected').length;
+      const totalBountyPaid = companyReports
+        .filter(r => r.status === 'Accepted' && r.reward)
+        .reduce((sum, r) => sum + r.reward, 0);
+
+      setStats({
+        totalReports,
+        pendingReports,
+        inReviewReports,
+        acceptedReports,
+        rejectedReports,
+        totalBountyPaid
+      });
+    };
+
     if (currentUser) {
       loadReports();
     }
-  }, [currentUser]);
-
-  const loadReports = () => {
-    // Get all reports for this company's programs
-    const userPrograms = getUserPrograms(currentUser.id);
-    const programIds = userPrograms.map(p => p.id);
-    const allReports = getAllReports();
-    
-    // Ensure allReports is an array
-    if (!Array.isArray(allReports)) {
-      console.error('getAllReports did not return an array:', allReports);
-      setReports([]);
-      return;
-    }
-    
-    const companyReports = allReports.filter(r => programIds.includes(r.companyId));
-    
-    setReports(companyReports.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)));
-    
-    // Calculate stats
-    const totalReports = companyReports.length;
-    const pendingReports = companyReports.filter(r => r.status === 'Pending Review').length;
-    const inReviewReports = companyReports.filter(r => r.status === 'In Review').length;
-    const acceptedReports = companyReports.filter(r => r.status === 'Accepted').length;
-    const rejectedReports = companyReports.filter(r => r.status === 'Rejected').length;
-    const totalBountyPaid = companyReports
-      .filter(r => r.status === 'Accepted' && r.reward)
-      .reduce((sum, r) => sum + r.reward, 0);
-
-    setStats({
-      totalReports,
-      pendingReports,
-      inReviewReports,
-      acceptedReports,
-      rejectedReports,
-      totalBountyPaid
-    });
-  };
+  }, []);
 
   if (!isCompany()) {
     return <Navigate to="/company-login" />;

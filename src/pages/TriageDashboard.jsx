@@ -9,6 +9,7 @@ const TriageDashboard = () => {
   const currentUser = getCurrentUser();
   const [reports, setReports] = useState([]);
   const [filter, setFilter] = useState('pending');
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalReports: 0,
     pendingReports: 0,
@@ -17,38 +18,51 @@ const TriageDashboard = () => {
   });
 
   useEffect(() => {
+    const loadReports = async () => {
+      try {
+        setLoading(true);
+        const allReports = await getAllReports();
+        
+        console.log('📊 Triage Dashboard: Loaded reports:', allReports);
+        
+        // Ensure allReports is an array
+        if (!Array.isArray(allReports)) {
+          console.error('getAllReports did not return an array:', allReports);
+          setReports([]);
+          setLoading(false);
+          return;
+        }
+        
+        setReports(allReports.sort((a, b) => new Date(b.submittedAt || b.createdAt) - new Date(a.submittedAt || a.createdAt)));
+        
+        const totalReports = allReports.length;
+        const pendingReports = allReports.filter(r => r.status === 'Pending Review').length;
+        const inReviewReports = allReports.filter(r => r.status === 'In Review').length;
+        const today = new Date().toDateString();
+        const reviewedToday = allReports.filter(r => 
+          r.updatedAt && new Date(r.updatedAt).toDateString() === today
+        ).length;
+
+        setStats({
+          totalReports,
+          pendingReports,
+          inReviewReports,
+          reviewedToday
+        });
+        
+        console.log('📈 Triage Stats:', { totalReports, pendingReports, inReviewReports, reviewedToday });
+      } catch (error) {
+        console.error('❌ Error loading reports:', error);
+        setReports([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (currentUser) {
       loadReports();
     }
-  }, [currentUser]);
-
-  const loadReports = () => {
-    const allReports = getAllReports();
-    
-    // Ensure allReports is an array
-    if (!Array.isArray(allReports)) {
-      console.error('getAllReports did not return an array:', allReports);
-      setReports([]);
-      return;
-    }
-    
-    setReports(allReports.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)));
-    
-    const totalReports = allReports.length;
-    const pendingReports = allReports.filter(r => r.status === 'Pending Review').length;
-    const inReviewReports = allReports.filter(r => r.status === 'In Review').length;
-    const today = new Date().toDateString();
-    const reviewedToday = allReports.filter(r => 
-      r.updatedAt && new Date(r.updatedAt).toDateString() === today
-    ).length;
-
-    setStats({
-      totalReports,
-      pendingReports,
-      inReviewReports,
-      reviewedToday
-    });
-  };
+  }, []);
 
   if (!isTriageTeam()) {
     return <Navigate to="/triage-login" />;
@@ -104,6 +118,15 @@ const TriageDashboard = () => {
   };
 
   const filteredReports = getFilteredReports().sort((a, b) => getPriorityScore(b) - getPriorityScore(a));
+  
+  console.log('🔄 Render State:', {
+    loading,
+    reportsCount: reports.length,
+    filter,
+    filteredReportsCount: filteredReports.length,
+    reports: reports,
+    filteredReports: filteredReports
+  });
 
   return (
     <div className="triage-dashboard-page">
@@ -116,14 +139,14 @@ const TriageDashboard = () => {
               <span className="sidebar-icon">🔍</span>
               <span className="sidebar-label">Review Queue</span>
             </div>
-            <div className="sidebar-item" onClick={() => alert('Analytics page coming soon!')}>
+            <Link to="/triage-analytics" className="sidebar-item">
               <span className="sidebar-icon">📊</span>
               <span className="sidebar-label">Analytics</span>
-            </div>
-            <div className="sidebar-item" onClick={() => alert('Settings page coming soon!')}>
+            </Link>
+            <Link to="/triage-settings" className="sidebar-item">
               <span className="sidebar-icon">⚙️</span>
               <span className="sidebar-label">Settings</span>
-            </div>
+            </Link>
           </div>
         </aside>
         
@@ -203,14 +226,20 @@ const TriageDashboard = () => {
 
           {/* Reports Queue */}
           <div className="reports-queue">
-            {filteredReports.length > 0 ? (
+            {loading ? (
+              <div className="no-reports">
+                <div className="no-reports-icon">⏳</div>
+                <h3>Loading Reports...</h3>
+                <p>Fetching reports from the database...</p>
+              </div>
+            ) : filteredReports.length > 0 ? (
               <div className="queue-list">
                 {filteredReports.map(report => {
                   const company = getCompanyById(report.companyId);
                   const priorityScore = getPriorityScore(report);
                   
                   return (
-                    <div key={report.id} className={`queue-item ${priorityScore > 4 ? 'high-priority' : ''}`}>
+                    <div key={report.id || report._id} className={`queue-item ${priorityScore > 4 ? 'high-priority' : ''}`}>
                       <div className="queue-header">
                         <div className="report-meta">
                           <span className="company-name">{company?.name || 'Unknown Company'}</span>
@@ -218,7 +247,7 @@ const TriageDashboard = () => {
                             {report.severity}
                           </span>
                           <span className="report-age">
-                            {Math.floor((Date.now() - new Date(report.submittedAt)) / (1000 * 60 * 60))}h ago
+                            {Math.floor((Date.now() - new Date(report.submittedAt || report.createdAt)) / (1000 * 60 * 60))}h ago
                           </span>
                         </div>
                         <div className="queue-actions">
@@ -242,12 +271,12 @@ const TriageDashboard = () => {
                       {report.status === 'Pending Review' && (
                         <div className="triage-actions">
                           <button
-                            onClick={() => handleStatusChange(report.id, 'In Review')}
+                            onClick={() => handleStatusChange(report._id || report.id, 'In Review')}
                             className="btn btn-secondary btn-sm"
                           >
                             Start Review
                           </button>
-                          <Link to={`/triage-review/${report.id}`} className="btn btn-primary btn-sm">
+                          <Link to={`/triage-review/${report._id || report.id}`} className="btn btn-primary btn-sm">
                             Full Review →
                           </Link>
                         </div>
@@ -260,7 +289,7 @@ const TriageDashboard = () => {
                               const reward = prompt('Enter bounty amount (if accepting):');
                               const feedback = prompt('Enter feedback:');
                               if (reward && feedback) {
-                                handleStatusChange(report.id, 'Accepted', Number(reward), feedback);
+                                handleStatusChange(report._id || report.id, 'Accepted', Number(reward), feedback);
                               }
                             }}
                             className="btn btn-success btn-sm"
@@ -271,14 +300,14 @@ const TriageDashboard = () => {
                             onClick={() => {
                               const feedback = prompt('Enter rejection reason:');
                               if (feedback) {
-                                handleStatusChange(report.id, 'Rejected', null, feedback);
+                                handleStatusChange(report._id || report.id, 'Rejected', null, feedback);
                               }
                             }}
                             className="btn btn-danger btn-sm"
                           >
                             Reject
                           </button>
-                          <Link to={`/triage-review/${report.id}`} className="btn btn-secondary btn-sm">
+                          <Link to={`/triage-review/${report._id || report.id}`} className="btn btn-secondary btn-sm">
                             Detailed Review
                           </Link>
                         </div>
@@ -291,7 +320,7 @@ const TriageDashboard = () => {
               <div className="no-reports">
                 <div className="no-reports-icon">🎉</div>
                 <h3>No Reports in Queue</h3>
-                <p>All caught up! No reports to review right now.</p>
+                <p>All caught up! No {filter !== 'all' ? filter : ''} reports to review right now.</p>
               </div>
             )}
           </div>

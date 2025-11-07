@@ -16,34 +16,34 @@ const CompanyDashboard = () => {
   });
 
   useEffect(() => {
+    const loadCompanyReports = async () => {
+      try {
+        // For demo, we'll show all reports but in real app this would be filtered by company
+        const allReports = await getAllReports();
+        setReports(allReports);
+        
+        const totalReports = allReports.length;
+        const pendingReports = allReports.filter(r => r.status === 'Pending Review').length;
+        const acceptedReports = allReports.filter(r => r.status === 'Accepted').length;
+        const totalBountyPaid = allReports
+          .filter(r => r.status === 'Accepted' && r.reward)
+          .reduce((sum, r) => sum + (r.reward || 0), 0);
+
+        setStats({
+          totalReports,
+          pendingReports,
+          acceptedReports,
+          totalBountyPaid
+        });
+      } catch (error) {
+        console.error('Error loading reports:', error);
+      }
+    };
+
     if (currentUser) {
       loadCompanyReports();
     }
-  }, [currentUser]);
-
-  const loadCompanyReports = async () => {
-    try {
-      // For demo, we'll show all reports but in real app this would be filtered by company
-      const allReports = await getAllReports();
-      setReports(allReports);
-      
-      const totalReports = allReports.length;
-      const pendingReports = allReports.filter(r => r.status === 'Pending Review').length;
-      const acceptedReports = allReports.filter(r => r.status === 'Accepted').length;
-      const totalBountyPaid = allReports
-        .filter(r => r.status === 'Accepted' && r.reward)
-        .reduce((sum, r) => sum + (r.reward || 0), 0);
-
-      setStats({
-        totalReports,
-        pendingReports,
-        acceptedReports,
-        totalBountyPaid
-      });
-    } catch (error) {
-      console.error('Error loading reports:', error);
-    }
-  };
+  }, []);
 
   if (!isCompany()) {
     return <Navigate to="/company-login" />;
@@ -84,10 +84,10 @@ const CompanyDashboard = () => {
               <span className="sidebar-icon">🚀</span>
               <span className="sidebar-label">Create Program</span>
             </Link>
-            <div className="sidebar-item" onClick={() => alert('My Programs page coming soon!')}>
+            <Link to="/create-program" className="sidebar-item">
               <span className="sidebar-icon">🏢</span>
               <span className="sidebar-label">My Programs</span>
-            </div>
+            </Link>
             <Link to="/company-reports" className="sidebar-item">
               <span className="sidebar-icon">📋</span>
               <span className="sidebar-label">Reports</span>
@@ -96,10 +96,10 @@ const CompanyDashboard = () => {
               <span className="sidebar-icon">💰</span>
               <span className="sidebar-label">Payments</span>
             </Link>
-            <div className="sidebar-item" onClick={() => alert('Settings page coming soon!')}>
+            <Link to="/company-settings" className="sidebar-item">
               <span className="sidebar-icon">⚙️</span>
               <span className="sidebar-label">Settings</span>
-            </div>
+            </Link>
           </div>
         </aside>
         
