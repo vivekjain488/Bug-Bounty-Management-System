@@ -1,16 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
 import Navbar from '../shared/Navbar';
 import Sidebar from '../shared/Sidebar';
 import { isAuthenticated, getCurrentUser } from '../utils/auth';
 import { getCompanyById } from '../utils/mockData';
+import { getProgramById } from '../utils/programs';
 import { submitReport } from '../utils/reports';
 
 const CompanyDetail = () => {
   const { id } = useParams();
-  const company = getCompanyById(id);
   const currentUser = getCurrentUser();
-  
+  const [company, setCompany] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [showReportForm, setShowReportForm] = useState(false);
   const [message, setMessage] = useState('');
   const [formData, setFormData] = useState({
@@ -24,12 +25,91 @@ const CompanyDetail = () => {
     proofOfConcept: '',
   });
 
+  useEffect(() => {
+    const loadCompany = async () => {
+      try {
+        setLoading(true);
+        // First try mock data
+        let companyData = getCompanyById(id);
+        
+        // If not in mock data, try fetching from MongoDB
+        if (!companyData) {
+          console.log('🔍 Not in mock data, fetching from MongoDB...');
+          companyData = await getProgramById(id);
+          
+          // Transform MongoDB program to company format
+          if (companyData) {
+            companyData = {
+              id: companyData._id || companyData.id,
+              name: companyData.name,
+              logo: companyData.logo || '🏢',
+              industry: companyData.industry,
+              tags: companyData.tags || [],
+              severity: companyData.severity || 'Medium',
+              minBounty: companyData.minBounty || 0,
+              maxBounty: companyData.maxBounty || 0,
+              description: companyData.description,
+              about: companyData.about,
+              scope: companyData.scope || [],
+              outOfScope: companyData.outOfScope || [],
+              rules: companyData.rules || [],
+              rewardStructure: companyData.rewardStructure || {}
+            };
+          }
+        }
+        
+        setCompany(companyData);
+        console.log('✅ Company/Program loaded:', companyData);
+      } catch (error) {
+        console.error('Error loading company:', error);
+        setCompany(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadCompany();
+  }, [id]);
+
   if (!isAuthenticated()) {
     return <Navigate to="/login" />;
   }
 
+  if (loading) {
+    return (
+      <div className="company-detail-page">
+        <Navbar />
+        <div className="dashboard-layout">
+          <Sidebar />
+          <main className="dashboard-main">
+            <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+              <h2>Loading program details...</h2>
+              <p>Please wait...</p>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   if (!company) {
-    return <Navigate to="/companies" />;
+    return (
+      <div className="company-detail-page">
+        <Navbar />
+        <div className="dashboard-layout">
+          <Sidebar />
+          <main className="dashboard-main">
+            <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+              <h2>Program not found</h2>
+              <p>The requested program could not be found.</p>
+              <Link to="/companies" className="btn btn-primary">
+                ← Back to All Companies
+              </Link>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
   }
 
   const handleChange = (e) => {
