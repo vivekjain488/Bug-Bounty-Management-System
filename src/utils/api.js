@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API Configuration
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'https://bug-bounty-management-system-backend.onrender.com/api';
 
 // Create axios instance with default config
 const api = axios.create({
