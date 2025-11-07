@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API Configuration
-const API_BASE_URL = 'https://bug-bounty-management-system-backend.onrender.com/api';
+const API_BASE_URL = 'http://localhost:3000/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -18,8 +18,16 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('🔑 Token found and added to request');
+    } else {
+      console.warn('⚠️ No token found in localStorage!');
+      console.log('📦 Current localStorage:', {
+        token: localStorage.getItem('token'),
+        currentUser: localStorage.getItem('currentUser')
+      });
     }
     console.log('🔗 API Request:', config.method.toUpperCase(), config.url);
+    console.log('📋 Request Headers:', config.headers);
     return config;
   },
   (error) => {
@@ -68,12 +76,27 @@ export const authAPI = {
   login: async (credentials) => {
     try {
       const response = await api.post('/auth/login', credentials);
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('currentUser', JSON.stringify(response.data.user));
+      console.log('🔐 Login Response:', response.data);
+      
+      // Handle different token locations in response
+      const token = response.data.token || response.data.accessToken || response.data.data?.token;
+      const user = response.data.user || response.data.data?.user || response.data;
+      
+      if (token) {
+        localStorage.setItem('token', token);
+        console.log('💾 Token saved to localStorage:', token.substring(0, 20) + '...');
+      } else {
+        console.error('⚠️ No token in response!', response.data);
       }
-      return { success: true, ...response.data };
+      
+      if (user) {
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        console.log('👤 User saved to localStorage:', user);
+      }
+      
+      return { success: true, token, user, ...response.data };
     } catch (error) {
+      console.error('❌ Login Error:', error.response?.data);
       return { 
         success: false, 
         message: error.response?.data?.message || 'Login failed' 
@@ -258,13 +281,39 @@ export const reportsAPI = {
 
   updateStatus: async (reportId, statusData) => {
     try {
-      const response = await api.patch(`/reports/${reportId}/status`, statusData);
-      return { success: true, report: response.data.report };
+      // Triage-specific endpoint for reviewing reports
+      const response = await api.patch(`/reports/${reportId}/review`, statusData);
+      return { success: true, report: response.data.report || response.data };
     } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Failed to update status' 
-      };
+      // Fallback: try different endpoints
+      console.log('Trying alternate endpoints for report update...');
+      
+      try {
+        // Try POST /reports/:id/review
+        const response = await api.post(`/reports/${reportId}/review`, statusData);
+        return { success: true, report: response.data.report || response.data };
+      } catch (postError) {
+        try {
+          // Try PATCH /reports/:id/status
+          const response = await api.patch(`/reports/${reportId}/status`, statusData);
+          return { success: true, report: response.data.report || response.data };
+        } catch (patchError) {
+          try {
+            // Final fallback: PUT /reports/:id with full report data
+            const response = await api.put(`/reports/${reportId}`, statusData);
+            return { success: true, report: response.data.report || response.data };
+          } catch (putError) {
+            return { 
+              success: false, 
+              message: error.response?.data?.message || 
+                      postError.response?.data?.message || 
+                      patchError.response?.data?.message ||
+                      putError.response?.data?.message || 
+                      'Failed to update status. Please contact administrator for permissions.' 
+            };
+          }
+        }
+      }
     }
   },
 

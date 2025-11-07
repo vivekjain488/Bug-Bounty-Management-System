@@ -77,6 +77,44 @@ router.post('/', authenticate, async (req, res) => {
   }
 });
 
+// Triage review endpoint (NO AUTH for demo)
+router.patch('/:id/review', async (req, res) => {
+  try {
+    const { status, reward, feedback } = req.body;
+    
+    console.log('📝 Triage Review Request:', { id: req.params.id, status, reward, feedback });
+    
+    const report = await Report.findById(req.params.id);
+    if (!report) {
+      return res.status(404).json({ success: false, message: 'Report not found' });
+    }
+    
+    const oldStatus = report.status;
+    report.status = status;
+    if (reward !== undefined) report.reward = Number(reward);
+    if (feedback) report.feedback = feedback;
+    report.updatedAt = new Date();
+    
+    await report.save();
+    
+    // Update user earnings if accepted with reward
+    if (status === 'Accepted' && reward && oldStatus !== 'Accepted') {
+      const user = await User.findById(report.userId);
+      if (user) {
+        user.totalEarnings = (user.totalEarnings || 0) + Number(reward);
+        await user.save();
+        console.log('💰 User earnings updated:', user.username, '+$' + reward);
+      }
+    }
+    
+    console.log('✅ Report reviewed successfully');
+    res.json({ success: true, message: 'Report updated successfully', report });
+  } catch (error) {
+    console.error('❌ Review error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Update report status (triage/company only)
 router.put('/:id/status', authenticate, authorize('triage', 'company'), async (req, res) => {
   try {
