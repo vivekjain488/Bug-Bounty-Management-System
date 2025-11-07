@@ -169,19 +169,24 @@ const CompanyDashboard = () => {
                 </div>
                 
                 {reports.slice(0, 5).map(report => {
-                  const company = getCompanyById(report.companyId);
+                  const company = getCompanyById(report.companyId || report.program);
+                  const reportId = report._id || report.id;
+                  const username = report.username || 
+                                  (typeof report.userId === 'object' ? report.userId?.username : report.userId) || 
+                                  'Anonymous';
+                  
                   return (
-                    <div key={report.id} className="table-row">
+                    <div key={reportId} className="table-row">
                       <div className="table-cell">
                         <div className="report-info">
                           <div className="report-title">{report.title}</div>
-                          <div className="report-type">{report.vulnerabilityType}</div>
+                          <div className="report-type">{report.vulnerabilityType || report.category}</div>
                         </div>
                       </div>
                       <div className="table-cell">
                         <div className="researcher-info">
-                          <div className="researcher-avatar">{report.username?.[0]?.toUpperCase()}</div>
-                          <span className="researcher-name">@{report.username}</span>
+                          <div className="researcher-avatar">{username[0]?.toUpperCase()}</div>
+                          <span className="researcher-name">@{username}</span>
                         </div>
                       </div>
                       <div className="table-cell">
@@ -195,11 +200,11 @@ const CompanyDashboard = () => {
                         </span>
                       </div>
                       <div className="table-cell">
-                        {new Date(report.submittedAt).toLocaleDateString()}
+                        {new Date(report.submittedAt || report.createdAt).toLocaleDateString()}
                       </div>
                       <div className="table-cell">
-                        <Link to={`/company-report/${report.id}`} className="btn btn-sm btn-secondary">
-                          Review
+                        <Link to={`/triage-review/${reportId}`} className="btn btn-sm btn-secondary">
+                          View Details
                         </Link>
                       </div>
                     </div>

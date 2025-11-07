@@ -187,7 +187,9 @@ const TriageReview = () => {
                     <h1 className="report-title">{report.title}</h1>
                     <p className="company-name">Reported to: {company?.name || 'Unknown Company'}</p>
                     <p className="researcher-info">
-                      By: @{report.username || report.userId} on {new Date(report.submittedAt || report.createdAt).toLocaleDateString()}
+                      By: @{report.username || 
+                            (typeof report.userId === 'object' ? report.userId?.username : report.userId) || 
+                            'Anonymous'} on {new Date(report.submittedAt || report.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>

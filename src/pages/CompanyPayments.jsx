@@ -206,20 +206,26 @@ const CompanyPayments = () => {
                     <div className="table-cell">Actions</div>
                   </div>
                   
-                  {payments.map(payment => (
-                    <div key={payment.id} className="table-row">
-                      <div className="table-cell">
-                        <div className="report-info">
-                          <div className="report-title">{payment.title}</div>
-                          <div className="report-type">{payment.vulnerabilityType}</div>
+                  {payments.map(payment => {
+                    const paymentId = payment._id || payment.id;
+                    const username = payment.username || 
+                                    (typeof payment.userId === 'object' ? payment.userId?.username : payment.userId) || 
+                                    'Anonymous';
+                    
+                    return (
+                      <div key={paymentId} className="table-row">
+                        <div className="table-cell">
+                          <div className="report-info">
+                            <div className="report-title">{payment.title}</div>
+                            <div className="report-type">{payment.vulnerabilityType || payment.category}</div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="table-cell">
-                        <div className="researcher-info">
-                          <div className="researcher-avatar">{payment.username?.[0]?.toUpperCase()}</div>
-                          <span className="researcher-name">@{payment.username}</span>
+                        <div className="table-cell">
+                          <div className="researcher-info">
+                            <div className="researcher-avatar">{username[0]?.toUpperCase()}</div>
+                            <span className="researcher-name">@{username}</span>
+                          </div>
                         </div>
-                      </div>
                       <div className="table-cell">
                         <span className={`severity-badge ${getSeverityColor(payment.severity)}`}>
                           {payment.severity}
@@ -228,28 +234,29 @@ const CompanyPayments = () => {
                       <div className="table-cell">
                         <span className="payment-amount">${payment.reward.toLocaleString()}</span>
                       </div>
-                      <div className="table-cell">
-                        {new Date(payment.updatedAt || payment.submittedAt).toLocaleDateString()}
+                        <div className="table-cell">
+                          {new Date(payment.updatedAt || payment.submittedAt || payment.createdAt).toLocaleDateString()}
+                        </div>
+                        <div className="table-cell">
+                          <span className={`status-badge ${getStatusColor(payment)}`}>
+                            {payment.paymentProcessed ? 'Paid' : 'Pending'}
+                          </span>
+                        </div>
+                        <div className="table-cell">
+                          {!payment.paymentProcessed ? (
+                            <button 
+                              onClick={() => markAsPaid(paymentId)}
+                              className="btn btn-sm btn-success"
+                            >
+                              Mark as Paid
+                            </button>
+                          ) : (
+                            <span className="payment-confirmed">✅ Paid</span>
+                          )}
+                        </div>
                       </div>
-                      <div className="table-cell">
-                        <span className={`status-badge ${getStatusColor(payment)}`}>
-                          {payment.paymentProcessed ? 'Paid' : 'Pending'}
-                        </span>
-                      </div>
-                      <div className="table-cell">
-                        {!payment.paymentProcessed ? (
-                          <button 
-                            onClick={() => markAsPaid(payment.id)}
-                            className="btn btn-sm btn-success"
-                          >
-                            Mark as Paid
-                          </button>
-                        ) : (
-                          <span className="payment-confirmed">✅ Paid</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="no-payments">

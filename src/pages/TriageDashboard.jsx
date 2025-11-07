@@ -265,7 +265,11 @@ const TriageDashboard = () => {
                       <h3 className="report-title">{report.title}</h3>
                       <div className="report-details">
                         <span className="vulnerability-type">{report.vulnerabilityType || report.category}</span>
-                        <span className="researcher">by @{report.username || report.userId}</span>
+                        <span className="researcher">
+                          by @{report.username || 
+                               (typeof report.userId === 'object' ? report.userId?.username : report.userId) || 
+                               'Anonymous'}
+                        </span>
                       </div>
                       
                       <p className="report-description">
