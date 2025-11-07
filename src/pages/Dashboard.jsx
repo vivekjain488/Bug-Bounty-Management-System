@@ -5,6 +5,7 @@ import Sidebar from '../shared/Sidebar';
 import CompanyCard from '../shared/CompanyCard';
 import { isAuthenticated } from '../utils/auth';
 import { getAllCompanies } from '../utils/mockData';
+import { getAllPrograms } from '../utils/programs';
 
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -14,12 +15,54 @@ const Dashboard = () => {
     maxBounty: '',
     tags: [],
   });
+  const [dbPrograms, setDbPrograms] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadPrograms = async () => {
+      try {
+        setLoading(true);
+        // Fetch programs from MongoDB
+        const programs = await getAllPrograms();
+        console.log('📊 Dashboard: Loaded programs from DB:', programs);
+        
+        // Transform MongoDB programs to match frontend structure
+        const transformedPrograms = programs.map(prog => ({
+          id: prog._id || prog.id,
+          name: prog.name,
+          logo: prog.logo || '🏢',
+          industry: prog.industry,
+          tags: prog.tags || [],
+          severity: prog.severity || 'Medium',
+          minBounty: prog.minBounty || 0,
+          maxBounty: prog.maxBounty || 0,
+          description: prog.description,
+          about: prog.about,
+          scope: prog.scope || [],
+          outOfScope: prog.outOfScope || [],
+          rules: prog.rules || [],
+          rewardStructure: prog.rewardStructure || {}
+        }));
+        
+        setDbPrograms(Array.isArray(transformedPrograms) ? transformedPrograms : []);
+      } catch (error) {
+        console.error('Error loading programs:', error);
+        setDbPrograms([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPrograms();
+  }, []);
 
   if (!isAuthenticated()) {
     return <Navigate to="/login" />;
   }
 
-  const allCompanies = getAllCompanies();
+  // Combine mock companies with database programs
+  const mockCompanies = getAllCompanies();
+  const allCompanies = [...mockCompanies, ...dbPrograms];
 
   // Combined filter function that applies all filters
   const getFilteredCompanies = () => {
@@ -174,18 +217,25 @@ const Dashboard = () => {
             </div>
           </div>
           
-          <div className="companies-grid">
-            {companies.length > 0 ? (
-              companies.map(company => (
-                <CompanyCard key={company.id} company={company} />
-              ))
-            ) : (
-              <div className="no-results">
-                <h3>No companies found</h3>
-                <p>Try adjusting your search or filters</p>
-              </div>
-            )}
-          </div>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+              <h2>Loading programs from database...</h2>
+              <p>Fetching bug bounty programs</p>
+            </div>
+          ) : (
+            <div className="companies-grid">
+              {companies.length > 0 ? (
+                companies.map(company => (
+                  <CompanyCard key={company.id || company._id} company={company} />
+                ))
+              ) : (
+                <div className="no-results">
+                  <h3>No companies found</h3>
+                  <p>Try adjusting your search or filters</p>
+                </div>
+              )}
+            </div>
+          )}
         </main>
       </div>
     </div>

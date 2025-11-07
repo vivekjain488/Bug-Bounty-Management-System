@@ -18,18 +18,19 @@ const CompanyPayments = () => {
 
   useEffect(() => {
     const loadPayments = async () => {
-      // Get accepted reports that have rewards
-      const userPrograms = await getUserPrograms();
-      
-      // Ensure userPrograms is an array
-      if (!Array.isArray(userPrograms)) {
-        console.error('getUserPrograms did not return an array:', userPrograms);
-        setPayments([]);
-        return;
-      }
-      
-      const programIds = userPrograms.map(p => p.id);
-      const allReports = await getAllReports();
+      try {
+        // Get accepted reports that have rewards from MongoDB
+        const userPrograms = await getUserPrograms(currentUser.id);
+        
+        // Ensure userPrograms is an array
+        if (!Array.isArray(userPrograms)) {
+          console.error('getUserPrograms did not return an array:', userPrograms);
+          setPayments([]);
+          return;
+        }
+        
+        const programIds = userPrograms.map(p => p.id || p._id);
+        const allReports = await getAllReports();
       
       // Ensure allReports is an array
       if (!Array.isArray(allReports)) {
@@ -39,12 +40,12 @@ const CompanyPayments = () => {
       }
       
       const acceptedReports = allReports.filter(r => 
-        programIds.includes(r.companyId) && 
+        programIds.includes(r.companyId || r.program) && 
         r.status === 'Accepted' && 
         r.reward
       );
 
-      setPayments(acceptedReports.sort((a, b) => new Date(b.updatedAt || b.submittedAt) - new Date(a.updatedAt || a.submittedAt)));
+      setPayments(acceptedReports.sort((a, b) => new Date(b.updatedAt || b.submittedAt || b.createdAt) - new Date(a.updatedAt || a.submittedAt || a.createdAt)));
 
       // Calculate stats
       const totalPaid = acceptedReports.reduce((sum, r) => sum + r.reward, 0);
@@ -69,12 +70,16 @@ const CompanyPayments = () => {
         thisMonth,
         averagePayment
       });
+      } catch (error) {
+        console.error('Error loading payments:', error);
+        setPayments([]);
+      }
     };
 
     if (currentUser) {
       loadPayments();
     }
-  }, [reload]);
+  }, [reload, currentUser]);
 
   if (!isCompany()) {
     return <Navigate to="/company-login" />;
@@ -96,6 +101,16 @@ const CompanyPayments = () => {
   const getStatusColor = (report) => {
     if (report.paymentProcessed) return 'status-accepted';
     return 'status-pending';
+  };
+
+  const getSeverityColor = (severity) => {
+    switch (severity?.toLowerCase()) {
+      case 'critical': return 'severity-critical';
+      case 'high': return 'severity-high';
+      case 'medium': return 'severity-medium';
+      case 'low': return 'severity-low';
+      default: return 'severity-info';
+    }
   };
 
   return (

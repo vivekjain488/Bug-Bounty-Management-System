@@ -1,183 +1,321 @@
 import axios from 'axios';
 
 // API Configuration
-// In production, use the Render backend URL
-// In development, use localhost
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = 'https://bug-bounty-management-system-backend.onrender.com/api';
 
-console.log('🔗 API Base URL:', API_BASE_URL);
-
-// Create axios instance
+// Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   },
-  timeout: 30000 // 30 second timeout for slow network
+  withCredentials: false,
 });
 
-// Add token to requests
+// Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log('🔗 API Request:', config.method.toUpperCase(), config.url);
     return config;
   },
   (error) => {
+    console.error('❌ Request Error:', error);
     return Promise.reject(error);
   }
 );
 
-// Handle token expiry
+// Response interceptor for error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('✅ API Response:', response.config.url, response.data);
+    return response;
+  },
   (error) => {
+    console.error('❌ API Error:', error.response?.data || error.message);
+    
+    // Handle specific error cases
     if (error.response?.status === 401) {
+      // Unauthorized - clear session and redirect to login
       localStorage.removeItem('token');
       localStorage.removeItem('currentUser');
       window.location.href = '/login';
     }
+    
     return Promise.reject(error);
   }
 );
 
-export default api;
-
-// Auth API
+// ===================================
+// Authentication API
+// ===================================
 export const authAPI = {
   signup: async (userData) => {
-    const response = await api.post('/auth/signup', userData);
-    if (response.data.success) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('currentUser', JSON.stringify(response.data.user));
+    try {
+      const response = await api.post('/auth/register', userData);
+      return { success: true, ...response.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Registration failed' 
+      };
     }
-    return response.data;
   },
-  
+
   login: async (credentials) => {
-    console.log('🌐 API: Sending login request to backend...', credentials.email);
-    const response = await api.post('/auth/login', credentials);
-    console.log('📨 API: Login response received:', response.data);
-    
-    if (response.data.success) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('currentUser', JSON.stringify(response.data.user));
-      console.log('💾 API: Token and user saved to localStorage');
+    try {
+      const response = await api.post('/auth/login', credentials);
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('currentUser', JSON.stringify(response.data.user));
+      }
+      return { success: true, ...response.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Login failed' 
+      };
     }
-    return response.data;
   },
-  
+
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('currentUser');
     return { success: true, message: 'Logged out successfully' };
   },
-  
-  getCurrentUser: async () => {
+
+  updateProfile: async (userId, updatedData) => {
     try {
-      const response = await api.get('/auth/me');
-      if (response.data.success) {
+      const response = await api.put(`/auth/profile/${userId}`, updatedData);
+      if (response.data.user) {
         localStorage.setItem('currentUser', JSON.stringify(response.data.user));
       }
-      return response.data;
+      return { success: true, ...response.data };
     } catch (error) {
-      const localUser = localStorage.getItem('currentUser');
-      return localUser ? JSON.parse(localUser) : null;
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Update failed' 
+      };
     }
   },
-  
-  updateProfile: async (updatedData) => {
-    const response = await api.put('/auth/me', updatedData);
-    if (response.data.success) {
-      localStorage.setItem('currentUser', JSON.stringify(response.data.user));
-    }
-    return response.data;
-  },
-  
-  deleteAccount: async () => {
-    const response = await api.delete('/auth/me');
-    if (response.data.success) {
+
+  deleteAccount: async (userId) => {
+    try {
+      await api.delete(`/auth/user/${userId}`);
       localStorage.removeItem('token');
       localStorage.removeItem('currentUser');
+      return { success: true, message: 'Account deleted successfully' };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Deletion failed' 
+      };
     }
-    return response.data;
   }
 };
 
-// Reports API
-export const reportsAPI = {
-  getAll: async () => {
-    const response = await api.get('/reports');
-    return response.data;
-  },
-  
-  getById: async (reportId) => {
-    const response = await api.get(`/reports/${reportId}`);
-    return response.data;
-  },
-  
-  submit: async (reportData) => {
-    const response = await api.post('/reports', reportData);
-    return response.data;
-  },
-  
-  update: async (reportId, updates) => {
-    const response = await api.put(`/reports/${reportId}`, updates);
-    return response.data;
-  },
-  
-  updateStatus: async (reportId, status, reward, feedback) => {
-    const response = await api.put(`/reports/${reportId}/status`, {
-      status,
-      reward,
-      feedback
-    });
-    return response.data;
-  },
-  
-  delete: async (reportId) => {
-    const response = await api.delete(`/reports/${reportId}`);
-    return response.data;
-  },
-  
-  getStats: async () => {
-    const response = await api.get('/reports/stats/my');
-    return response.data;
-  }
-};
-
+// ===================================
 // Programs API
+// ===================================
 export const programsAPI = {
-  getAll: async () => {
-    const response = await api.get('/programs');
-    return response.data;
-  },
-  
-  getById: async (programId) => {
-    const response = await api.get(`/programs/${programId}`);
-    return response.data;
-  },
-  
   create: async (programData) => {
-    const response = await api.post('/programs', programData);
-    return response.data;
+    try {
+      const response = await api.post('/programs', programData);
+      return { success: true, program: response.data.program };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to create program' 
+      };
+    }
   },
-  
-  update: async (programId, updates) => {
-    const response = await api.put(`/programs/${programId}`, updates);
-    return response.data;
+
+  getAll: async () => {
+    try {
+      const response = await api.get('/programs');
+      return response.data.programs || [];
+    } catch (error) {
+      console.error('Error fetching programs:', error);
+      return [];
+    }
   },
-  
-  delete: async (programId) => {
-    const response = await api.delete(`/programs/${programId}`);
-    return response.data;
+
+  getById: async (programId) => {
+    try {
+      const response = await api.get(`/programs/${programId}`);
+      return response.data.program || null;
+    } catch (error) {
+      console.error('Error fetching program:', error);
+      return null;
+    }
   },
-  
+
   getMyPrograms: async () => {
-    const response = await api.get('/programs/company/my');
-    return response.data;
+    try {
+      const response = await api.get('/programs/company/my');
+      return response.data.programs || [];
+    } catch (error) {
+      console.error('Error fetching my programs:', error);
+      return [];
+    }
+  },
+
+  update: async (programId, updatedData) => {
+    try {
+      const response = await api.put(`/programs/${programId}`, updatedData);
+      return { success: true, program: response.data.program };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to update program' 
+      };
+    }
+  },
+
+  delete: async (programId) => {
+    try {
+      await api.delete(`/programs/${programId}`);
+      return { success: true, message: 'Program deleted successfully' };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to delete program' 
+      };
+    }
   }
 };
 
+// ===================================
+// Reports API
+// ===================================
+export const reportsAPI = {
+  create: async (reportData) => {
+    try {
+      const response = await api.post('/reports', reportData);
+      return { success: true, report: response.data.report };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to submit report' 
+      };
+    }
+  },
+
+  getAll: async () => {
+    try {
+      const response = await api.get('/reports');
+      return response.data.reports || response.data || [];
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+      return [];
+    }
+  },
+
+  getById: async (reportId) => {
+    try {
+      const response = await api.get(`/reports/${reportId}`);
+      return response.data.report || null;
+    } catch (error) {
+      console.error('Error fetching report:', error);
+      return null;
+    }
+  },
+
+  getMyReports: async () => {
+    try {
+      const response = await api.get('/reports/my');
+      return response.data.reports || [];
+    } catch (error) {
+      console.error('Error fetching my reports:', error);
+      return [];
+    }
+  },
+
+  getByProgram: async (programId) => {
+    try {
+      const response = await api.get(`/reports/program/${programId}`);
+      return response.data.reports || [];
+    } catch (error) {
+      console.error('Error fetching program reports:', error);
+      return [];
+    }
+  },
+
+  update: async (reportId, updatedData) => {
+    try {
+      const response = await api.put(`/reports/${reportId}`, updatedData);
+      return { success: true, report: response.data.report };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to update report' 
+      };
+    }
+  },
+
+  updateStatus: async (reportId, statusData) => {
+    try {
+      const response = await api.patch(`/reports/${reportId}/status`, statusData);
+      return { success: true, report: response.data.report };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to update status' 
+      };
+    }
+  },
+
+  delete: async (reportId) => {
+    try {
+      await api.delete(`/reports/${reportId}`);
+      return { success: true, message: 'Report deleted successfully' };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to delete report' 
+      };
+    }
+  }
+};
+
+// ===================================
+// Payments API
+// ===================================
+export const paymentsAPI = {
+  getAll: async () => {
+    try {
+      const response = await api.get('/payments');
+      return response.data.payments || [];
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+      return [];
+    }
+  },
+
+  markAsPaid: async (reportId) => {
+    try {
+      const response = await api.post(`/payments/${reportId}/process`);
+      return { success: true, payment: response.data.payment };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to process payment' 
+      };
+    }
+  },
+
+  getStats: async () => {
+    try {
+      const response = await api.get('/payments/stats');
+      return response.data.stats || {};
+    } catch (error) {
+      console.error('Error fetching payment stats:', error);
+      return {};
+    }
+  }
+};
+
+export default api;

@@ -55,8 +55,8 @@ const CompanyDetail = () => {
       category: formData.vulnerabilityType, // Map vulnerabilityType to category
       stepsToReproduce: formData.stepsToReproduce,
       impact: formData.impact,
-      companyId: company.id.toString(),
-      programId: company.id.toString(), // Use companyId as programId for now (since we're using mock data)
+      companyId: (company._id || company.id).toString(),
+      programId: (company._id || company.id).toString(),
       // Optional fields
       tags: formData.targetUrl ? [`Target: ${formData.targetUrl}`] : [],
       attachments: formData.proofOfConcept ? [formData.proofOfConcept] : [],

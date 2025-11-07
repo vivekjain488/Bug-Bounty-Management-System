@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Navigate, useParams, useNavigate } from 'react-router-dom';
+import { Navigate, useParams, useNavigate, Link } from 'react-router-dom';
 import Navbar from '../shared/Navbar';
 import { isTriageTeam, getCurrentUser } from '../utils/auth';
 import { getReportById, updateReportStatus } from '../utils/reports';
@@ -20,17 +20,25 @@ const TriageReview = () => {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const reportData = getReportById(id);
-    if (reportData) {
-      setReport(reportData);
-      setCompany(getCompanyById(reportData.companyId));
-      setReviewData({
-        status: reportData.status,
-        reward: reportData.reward || '',
-        feedback: reportData.feedback || '',
-        internalNotes: ''
-      });
-    }
+    const loadReport = async () => {
+      try {
+        const reportData = await getReportById(id);
+        if (reportData) {
+          setReport(reportData);
+          setCompany(getCompanyById(reportData.companyId || reportData.program));
+          setReviewData({
+            status: reportData.status,
+            reward: reportData.reward || '',
+            feedback: reportData.feedback || '',
+            internalNotes: ''
+          });
+        }
+      } catch (error) {
+        console.error('Error loading report:', error);
+      }
+    };
+    
+    loadReport();
   }, [id]);
 
   if (!isTriageTeam()) {
@@ -77,8 +85,8 @@ const TriageReview = () => {
     }
 
     setMessage('Processing review...');
-    const result = updateReportStatus(
-      report.id,
+    const result = await updateReportStatus(
+      report.id || report._id,
       reviewData.status,
       reviewData.reward ? Number(reviewData.reward) : null,
       reviewData.feedback
@@ -178,7 +186,9 @@ const TriageReview = () => {
                   <div>
                     <h1 className="report-title">{report.title}</h1>
                     <p className="company-name">Reported to: {company?.name || 'Unknown Company'}</p>
-                    <p className="researcher-info">By: @{report.username} on {new Date(report.submittedAt).toLocaleDateString()}</p>
+                    <p className="researcher-info">
+                      By: @{report.username || report.userId} on {new Date(report.submittedAt || report.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -187,13 +197,16 @@ const TriageReview = () => {
                 <div className="detail-card">
                   <h3>Vulnerability Details</h3>
                   <div className="detail-item">
-                    <strong>Type:</strong> {report.vulnerabilityType}
+                    <strong>Type:</strong> {report.vulnerabilityType || report.category}
                   </div>
                   <div className="detail-item">
                     <strong>Severity:</strong> {report.severity}
                   </div>
                   <div className="detail-item">
-                    <strong>Target URL:</strong> {report.targetUrl || 'Not specified'}
+                    <strong>Target URL:</strong> {report.targetUrl || (report.tags && report.tags[0]) || 'Not specified'}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Submitted:</strong> {new Date(report.submittedAt || report.createdAt).toLocaleString()}
                   </div>
                 </div>
 
@@ -214,7 +227,10 @@ const TriageReview = () => {
 
                 <div className="detail-card">
                   <h3>Proof of Concept</h3>
-                  <pre className="detail-text">{report.proofOfConcept || 'Not provided'}</pre>
+                  <pre className="detail-text">
+                    {report.proofOfConcept || 
+                     (report.attachments && report.attachments.length > 0 ? report.attachments.join('\n\n') : 'Not provided')}
+                  </pre>
                 </div>
               </div>
             </div>

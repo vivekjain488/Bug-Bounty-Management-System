@@ -21,6 +21,7 @@ const TriageDashboard = () => {
     const loadReports = async () => {
       try {
         setLoading(true);
+        // Fetch all reports from MongoDB
         const allReports = await getAllReports();
         
         console.log('📊 Triage Dashboard: Loaded reports:', allReports);
@@ -82,9 +83,11 @@ const TriageDashboard = () => {
   };
 
   const handleStatusChange = async (reportId, newStatus, reward = null, feedback = '') => {
-    const result = updateReportStatus(reportId, newStatus, reward, feedback);
+    const result = await updateReportStatus(reportId, newStatus, reward, feedback);
     if (result.success) {
-      loadReports(); // Reload to get updated data
+      // Reload reports from MongoDB
+      const allReports = await getAllReports();
+      setReports(Array.isArray(allReports) ? allReports.sort((a, b) => new Date(b.submittedAt || b.createdAt) - new Date(a.submittedAt || a.createdAt)) : []);
       alert(`Report ${newStatus.toLowerCase()} successfully!`);
     } else {
       alert('Error updating report: ' + result.message);
@@ -235,11 +238,12 @@ const TriageDashboard = () => {
             ) : filteredReports.length > 0 ? (
               <div className="queue-list">
                 {filteredReports.map(report => {
-                  const company = getCompanyById(report.companyId);
+                  const company = getCompanyById(report.companyId || report.program);
                   const priorityScore = getPriorityScore(report);
+                  const reportId = report._id || report.id; // MongoDB uses _id
                   
                   return (
-                    <div key={report.id || report._id} className={`queue-item ${priorityScore > 4 ? 'high-priority' : ''}`}>
+                    <div key={reportId} className={`queue-item ${priorityScore > 4 ? 'high-priority' : ''}`}>
                       <div className="queue-header">
                         <div className="report-meta">
                           <span className="company-name">{company?.name || 'Unknown Company'}</span>
@@ -260,8 +264,8 @@ const TriageDashboard = () => {
                       
                       <h3 className="report-title">{report.title}</h3>
                       <div className="report-details">
-                        <span className="vulnerability-type">{report.vulnerabilityType}</span>
-                        <span className="researcher">by @{report.username}</span>
+                        <span className="vulnerability-type">{report.vulnerabilityType || report.category}</span>
+                        <span className="researcher">by @{report.username || report.userId}</span>
                       </div>
                       
                       <p className="report-description">
@@ -271,12 +275,12 @@ const TriageDashboard = () => {
                       {report.status === 'Pending Review' && (
                         <div className="triage-actions">
                           <button
-                            onClick={() => handleStatusChange(report._id || report.id, 'In Review')}
+                            onClick={() => handleStatusChange(reportId, 'In Review')}
                             className="btn btn-secondary btn-sm"
                           >
                             Start Review
                           </button>
-                          <Link to={`/triage-review/${report._id || report.id}`} className="btn btn-primary btn-sm">
+                          <Link to={`/triage-review/${reportId}`} className="btn btn-primary btn-sm">
                             Full Review →
                           </Link>
                         </div>
@@ -289,7 +293,7 @@ const TriageDashboard = () => {
                               const reward = prompt('Enter bounty amount (if accepting):');
                               const feedback = prompt('Enter feedback:');
                               if (reward && feedback) {
-                                handleStatusChange(report._id || report.id, 'Accepted', Number(reward), feedback);
+                                handleStatusChange(reportId, 'Accepted', Number(reward), feedback);
                               }
                             }}
                             className="btn btn-success btn-sm"
@@ -300,14 +304,14 @@ const TriageDashboard = () => {
                             onClick={() => {
                               const feedback = prompt('Enter rejection reason:');
                               if (feedback) {
-                                handleStatusChange(report._id || report.id, 'Rejected', null, feedback);
+                                handleStatusChange(reportId, 'Rejected', null, feedback);
                               }
                             }}
                             className="btn btn-danger btn-sm"
                           >
                             Reject
                           </button>
-                          <Link to={`/triage-review/${report._id || report.id}`} className="btn btn-secondary btn-sm">
+                          <Link to={`/triage-review/${reportId}`} className="btn btn-secondary btn-sm">
                             Detailed Review
                           </Link>
                         </div>

@@ -18,9 +18,10 @@ const CompanyDashboard = () => {
   useEffect(() => {
     const loadCompanyReports = async () => {
       try {
-        // For demo, we'll show all reports but in real app this would be filtered by company
+        // Fetch all reports from MongoDB
         const allReports = await getAllReports();
-        setReports(allReports);
+        console.log('📊 Company Dashboard: Loaded reports:', allReports);
+        setReports(Array.isArray(allReports) ? allReports : []);
         
         const totalReports = allReports.length;
         const pendingReports = allReports.filter(r => r.status === 'Pending Review').length;

@@ -13,21 +13,22 @@ const CompanyReports = () => {
 
   useEffect(() => {
     const loadReports = async () => {
-      // Get all reports for this company's programs
-      const userPrograms = await getUserPrograms();
-      const programIds = userPrograms.map(p => p.id);
-      const allReports = await getAllReports();
+      try {
+        // Get all reports for this company's programs from MongoDB
+        const userPrograms = await getUserPrograms(currentUser.id);
+        const programIds = userPrograms.map(p => p.id || p._id);
+        const allReports = await getAllReports();
+        
+        // Ensure allReports is an array
+        if (!Array.isArray(allReports)) {
+          console.error('getAllReports did not return an array:', allReports);
+          setReports([]);
+          return;
+        }
+        
+        const companyReports = allReports.filter(r => programIds.includes(r.companyId || r.program));
       
-      // Ensure allReports is an array
-      if (!Array.isArray(allReports)) {
-        console.error('getAllReports did not return an array:', allReports);
-        setReports([]);
-        return;
-      }
-      
-      const companyReports = allReports.filter(r => programIds.includes(r.companyId));
-      
-      setReports(companyReports.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)));
+        setReports(companyReports.sort((a, b) => new Date(b.submittedAt || b.createdAt) - new Date(a.submittedAt || a.createdAt)));
       
       // Calculate stats
       const totalReports = companyReports.length;
@@ -47,12 +48,16 @@ const CompanyReports = () => {
         rejectedReports,
         totalBountyPaid
       });
+      } catch (error) {
+        console.error('Error loading reports:', error);
+        setReports([]);
+      }
     };
 
     if (currentUser) {
       loadReports();
     }
-  }, []);
+  }, [currentUser]);
 
   if (!isCompany()) {
     return <Navigate to="/company-login" />;

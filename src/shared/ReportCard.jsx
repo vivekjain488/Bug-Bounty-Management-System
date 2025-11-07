@@ -52,7 +52,7 @@ const ReportCard = ({ report, company }) => {
         <span className={`severity-badge ${getSeverityColor(report?.severity)}`}>
           {report?.severity || 'Unknown'}
         </span>
-        <span className="report-type">{report?.vulnerabilityType || 'Unknown Type'}</span>
+        <span className="report-type">{report?.vulnerabilityType || report?.category || 'Unknown Type'}</span>
       </div>
       
       <p className="report-description">

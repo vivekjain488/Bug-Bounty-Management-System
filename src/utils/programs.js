@@ -1,37 +1,48 @@
-// Program management utilities using API
-import { programsAPI } from './api.js';
+// Program management utilities with MongoDB integration
+import { programsAPI } from './api';
 
 export const createProgram = async (programData) => {
   try {
-    return await programsAPI.create(programData);
+    const result = await programsAPI.create(programData);
+    
+    // Update company stats locally for immediate feedback
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (currentUser && result.success) {
+      currentUser.programsCreated = (currentUser.programsCreated || 0) + 1;
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    }
+    
+    return result;
   } catch (error) {
-    return { success: false, message: error.response?.data?.message || 'Failed to create program' };
+    return { success: false, message: 'Failed to create program' };
   }
 };
 
-export const getUserPrograms = async () => {
+export const getUserPrograms = async (userId) => {
   try {
-    const result = await programsAPI.getMyPrograms();
-    return result.success ? result.programs : [];
+    const programs = await programsAPI.getMyPrograms();
+    return Array.isArray(programs) ? programs : [];
   } catch (error) {
+    console.error('Error getting user programs:', error);
     return [];
   }
 };
 
 export const getAllPrograms = async () => {
   try {
-    const result = await programsAPI.getAll();
-    return result.success ? result.programs : [];
+    const programs = await programsAPI.getAll();
+    return Array.isArray(programs) ? programs : [];
   } catch (error) {
+    console.error('Error getting all programs:', error);
     return [];
   }
 };
 
 export const getProgramById = async (programId) => {
   try {
-    const result = await programsAPI.getById(programId);
-    return result.success ? result.program : null;
+    return await programsAPI.getById(programId);
   } catch (error) {
+    console.error('Error getting program:', error);
     return null;
   }
 };
@@ -40,7 +51,7 @@ export const updateProgram = async (programId, updatedData) => {
   try {
     return await programsAPI.update(programId, updatedData);
   } catch (error) {
-    return { success: false, message: error.response?.data?.message || 'Failed to update program' };
+    return { success: false, message: 'Failed to update program' };
   }
 };
 
@@ -48,18 +59,31 @@ export const deleteProgram = async (programId) => {
   try {
     return await programsAPI.delete(programId);
   } catch (error) {
-    return { success: false, message: error.response?.data?.message || 'Failed to delete program' };
+    return { success: false, message: 'Failed to delete program' };
   }
 };
 
 export const getProgramStats = async (programId) => {
-  // This would need to be calculated from the backend or passed with program data
-  // For now, return a default structure
-  return {
-    totalReports: 0,
-    pendingReports: 0,
-    acceptedReports: 0,
-    rejectedReports: 0,
-    totalBountyPaid: 0
-  };
+  try {
+    // This would come from the backend aggregation
+    const reports = await reportsAPI.getByProgram(programId);
+    
+    return {
+      totalReports: reports.length,
+      pendingReports: reports.filter(r => r.status === 'Pending Review').length,
+      acceptedReports: reports.filter(r => r.status === 'Accepted').length,
+      rejectedReports: reports.filter(r => r.status === 'Rejected').length,
+      totalBountyPaid: reports
+        .filter(r => r.status === 'Accepted' && r.reward)
+        .reduce((sum, r) => sum + r.reward, 0)
+    };
+  } catch (error) {
+    return {
+      totalReports: 0,
+      pendingReports: 0,
+      acceptedReports: 0,
+      rejectedReports: 0,
+      totalBountyPaid: 0
+    };
+  }
 };
