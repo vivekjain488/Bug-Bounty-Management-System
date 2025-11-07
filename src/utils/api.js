@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 // API Configuration
-const API_BASE_URL = 'https://bug-bounty-management-system-backend.onrender.com/api';
+// const API_BASE_URL = 'https://bug-bounty-management-system-backend.onrender.com/api';
+const API_BASE_URL = 'http://localhost:3000/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -254,6 +255,16 @@ export const reportsAPI = {
     } catch (error) {
       console.error('Error fetching my reports:', error);
       return [];
+    }
+  },
+
+  getMyStats: async () => {
+    try {
+      const response = await api.get('/reports/stats/my');
+      return response.data.stats || {};
+    } catch (error) {
+      console.error('Error fetching report stats:', error);
+      return {};
     }
   },
 

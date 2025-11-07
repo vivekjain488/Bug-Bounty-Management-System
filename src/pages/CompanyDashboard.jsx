@@ -3,6 +3,7 @@ import { Navigate, Link } from 'react-router-dom';
 import Navbar from '../shared/Navbar';
 import { isCompany, getCurrentUser } from '../utils/auth';
 import { getAllReports } from '../utils/reports';
+import { getUserPrograms } from '../utils/programs';
 import { getCompanyById } from '../utils/mockData';
 
 const CompanyDashboard = () => {
@@ -18,15 +19,35 @@ const CompanyDashboard = () => {
   useEffect(() => {
     const loadCompanyReports = async () => {
       try {
+        // Get company's programs first
+        const userPrograms = await getUserPrograms(currentUser._id || currentUser.id);
+        console.log('🏢 Company Programs:', userPrograms);
+        
+        // Get program IDs (both regular id and MongoDB _id)
+        const programIds = userPrograms.map(p => (p._id || p.id).toString());
+        console.log('📋 Program IDs:', programIds);
+        
         // Fetch all reports from MongoDB
         const allReports = await getAllReports();
-        console.log('📊 Company Dashboard: Loaded reports:', allReports);
-        setReports(Array.isArray(allReports) ? allReports : []);
+        console.log('📊 All Reports:', allReports);
         
-        const totalReports = allReports.length;
-        const pendingReports = allReports.filter(r => r.status === 'Pending Review').length;
-        const acceptedReports = allReports.filter(r => r.status === 'Accepted').length;
-        const totalBountyPaid = allReports
+        // Filter reports for this company's programs
+        const companyReports = allReports.filter(r => {
+          const reportProgramId = (r.programId || r.companyId).toString();
+          const matches = programIds.includes(reportProgramId);
+          if (matches) {
+            console.log('✅ Report matches company program:', r.title, reportProgramId);
+          }
+          return matches;
+        });
+        
+        console.log('🎯 Company-specific reports:', companyReports);
+        setReports(Array.isArray(companyReports) ? companyReports : []);
+        
+        const totalReports = companyReports.length;
+        const pendingReports = companyReports.filter(r => r.status === 'Pending Review').length;
+        const acceptedReports = companyReports.filter(r => r.status === 'Accepted').length;
+        const totalBountyPaid = companyReports
           .filter(r => r.status === 'Accepted' && r.reward)
           .reduce((sum, r) => sum + (r.reward || 0), 0);
 
@@ -38,13 +59,14 @@ const CompanyDashboard = () => {
         });
       } catch (error) {
         console.error('Error loading reports:', error);
+        setReports([]);
       }
     };
 
     if (currentUser) {
       loadCompanyReports();
     }
-  }, []);
+  }, [currentUser]);
 
   if (!isCompany()) {
     return <Navigate to="/company-login" />;

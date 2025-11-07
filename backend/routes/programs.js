@@ -1,5 +1,6 @@
 import express from 'express';
 import Program from '../models/Program.js';
+import User from '../models/User.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -15,16 +16,26 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get company's programs
+router.get('/company/my', authenticate, async (req, res) => {
+  try {
+    const programs = await Program.find({ companyId: req.user._id });
+    res.json({ success: true, programs });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Get single program
 router.get('/:id', async (req, res) => {
   try {
     const program = await Program.findById(req.params.id)
       .populate('companyId', 'companyName industry website isVerified');
-    
+
     if (!program) {
       return res.status(404).json({ success: false, message: 'Program not found' });
     }
-    
+
     res.json({ success: true, program });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -113,18 +124,6 @@ router.delete('/:id', authenticate, async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
-
-// Get company's programs
-router.get('/company/my', authenticate, async (req, res) => {
-  try {
-    const programs = await Program.find({ companyId: req.user._id });
-    res.json({ success: true, programs });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-import User from '../models/User.js';
 
 export default router;
 

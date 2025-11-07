@@ -15,9 +15,14 @@ const CompanyReports = () => {
     const loadReports = async () => {
       try {
         // Get all reports for this company's programs from MongoDB
-        const userPrograms = await getUserPrograms(currentUser.id);
-        const programIds = userPrograms.map(p => p.id || p._id);
+        const userPrograms = await getUserPrograms(currentUser._id || currentUser.id);
+        console.log('🏢 Company Programs for filtering:', userPrograms);
+        
+        const programIds = userPrograms.map(p => (p._id || p.id).toString());
+        console.log('📋 Program IDs to match:', programIds);
+        
         const allReports = await getAllReports();
+        console.log('📊 All Reports:', allReports);
         
         // Ensure allReports is an array
         if (!Array.isArray(allReports)) {
@@ -26,7 +31,17 @@ const CompanyReports = () => {
           return;
         }
         
-        const companyReports = allReports.filter(r => programIds.includes(r.companyId || r.program));
+        // Filter reports that match this company's programs
+        const companyReports = allReports.filter(r => {
+          const reportProgramId = (r.programId || r.companyId).toString();
+          const matches = programIds.includes(reportProgramId);
+          if (matches) {
+            console.log('✅ Match found:', r.title, 'programId:', reportProgramId);
+          }
+          return matches;
+        });
+        
+        console.log('🎯 Filtered company reports:', companyReports);
       
         setReports(companyReports.sort((a, b) => new Date(b.submittedAt || b.createdAt) - new Date(a.submittedAt || a.createdAt)));
       

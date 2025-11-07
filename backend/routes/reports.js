@@ -1,11 +1,12 @@
 import express from 'express';
 import Report from '../models/Report.js';
 import User from '../models/User.js';
+import Program from '../models/Program.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get all reports (triage/company only)
+// Get all reports (role-aware)
 router.get('/', authenticate, async (req, res) => {
   try {
     const { role } = req.user;
@@ -25,6 +26,64 @@ router.get('/', authenticate, async (req, res) => {
     }
     
     res.json({ success: true, reports });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Get current user's reports
+router.get('/my', authenticate, async (req, res) => {
+  try {
+    const reports = await Report.find({ userId: req.user._id })
+      .populate('reviewedBy', 'username fullName');
+
+    res.json({ success: true, reports });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Get program-specific reports
+router.get('/program/:programId', authenticate, async (req, res) => {
+  try {
+    const { role } = req.user;
+    const { programId } = req.params;
+
+    let query = { programId };
+
+    if (role === 'company') {
+      query.companyId = req.user._id.toString();
+    } else if (role === 'user') {
+      query.userId = req.user._id;
+    }
+
+    const reports = await Report.find(query)
+      .populate('userId', 'username fullName')
+      .populate('reviewedBy', 'username fullName');
+
+    res.json({ success: true, reports });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Get report stats (current user)
+router.get('/stats/my', authenticate, async (req, res) => {
+  try {
+    const reports = await Report.find({ userId: req.user._id });
+
+    const stats = {
+      total: reports.length,
+      pending: reports.filter(r => r.status === 'Pending Review').length,
+      inReview: reports.filter(r => r.status === 'In Review').length,
+      accepted: reports.filter(r => r.status === 'Accepted').length,
+      rejected: reports.filter(r => r.status === 'Rejected').length,
+      totalEarnings: reports
+        .filter(r => r.status === 'Accepted' && r.reward)
+        .reduce((sum, r) => sum + (r.reward || 0), 0)
+    };
+
+    res.json({ success: true, stats });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -55,9 +114,22 @@ router.get('/:id', authenticate, async (req, res) => {
 // Submit report
 router.post('/', authenticate, async (req, res) => {
   try {
+    const { programId } = req.body;
+
+    if (!programId) {
+      return res.status(400).json({ success: false, message: 'Program ID is required' });
+    }
+
+    const program = await Program.findById(programId);
+    if (!program) {
+      return res.status(404).json({ success: false, message: 'Program not found' });
+    }
+
     const reportData = {
       ...req.body,
       userId: req.user._id,
+      companyId: program.companyId.toString(),
+      programId: program._id.toString(),
       submittedAt: new Date()
     };
     
@@ -193,28 +265,6 @@ router.delete('/:id', authenticate, async (req, res) => {
     
     await Report.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: 'Report deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// Get report stats
-router.get('/stats/my', authenticate, async (req, res) => {
-  try {
-    const reports = await Report.find({ userId: req.user._id });
-    
-    const stats = {
-      total: reports.length,
-      pending: reports.filter(r => r.status === 'Pending Review').length,
-      inReview: reports.filter(r => r.status === 'In Review').length,
-      accepted: reports.filter(r => r.status === 'Accepted').length,
-      rejected: reports.filter(r => r.status === 'Rejected').length,
-      totalEarnings: reports
-        .filter(r => r.status === 'Accepted' && r.reward)
-        .reduce((sum, r) => sum + (r.reward || 0), 0)
-    };
-    
-    res.json({ success: true, stats });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

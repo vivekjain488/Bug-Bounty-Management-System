@@ -39,8 +39,16 @@ const CompanyDetail = () => {
           
           // Transform MongoDB program to company format
           if (companyData) {
+            const companyOwnerId = typeof companyData.companyId === 'object'
+              ? companyData.companyId?._id || companyData.companyId?.id
+              : companyData.companyId;
+
             companyData = {
-              id: companyData._id || companyData.id,
+              id: companyData._id?.toString() || companyData.id,
+              _id: companyData._id?.toString() || companyData.id,
+              programId: companyData._id?.toString() || companyData.id,
+              companyUserId: companyOwnerId?.toString(),
+              companyId: companyOwnerId?.toString(),
               name: companyData.name,
               logo: companyData.logo || '🏢',
               industry: companyData.industry,
@@ -135,8 +143,8 @@ const CompanyDetail = () => {
       category: formData.vulnerabilityType, // Map vulnerabilityType to category
       stepsToReproduce: formData.stepsToReproduce,
       impact: formData.impact,
-      companyId: (company._id || company.id).toString(),
-      programId: (company._id || company.id).toString(),
+      companyId: (company.companyUserId || company.companyId || company.ownerId || company._id || company.id)?.toString(),
+      programId: (company.programId || company._id || company.id)?.toString(),
       // Optional fields
       tags: formData.targetUrl ? [`Target: ${formData.targetUrl}`] : [],
       attachments: formData.proofOfConcept ? [formData.proofOfConcept] : [],

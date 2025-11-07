@@ -79,14 +79,14 @@ export const deleteReport = async (reportId) => {
 
 export const getReportStats = async (userId) => {
   try {
-    const reports = await getUserReports(userId);
+    const stats = await reportsAPI.getMyStats();
     
     return {
-      total: reports.length,
-      pending: reports.filter(r => r.status === 'Pending Review').length,
-      accepted: reports.filter(r => r.status === 'Accepted').length,
-      rejected: reports.filter(r => r.status === 'Rejected').length,
-      inReview: reports.filter(r => r.status === 'In Review').length,
+      total: stats.total || 0,
+      pending: stats.pending || 0,
+      accepted: stats.accepted || 0,
+      rejected: stats.rejected || 0,
+      inReview: stats.inReview || 0,
     };
   } catch (error) {
     return {
