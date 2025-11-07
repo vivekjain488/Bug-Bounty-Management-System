@@ -63,7 +63,7 @@ api.interceptors.response.use(
 export const authAPI = {
   signup: async (userData) => {
     try {
-      const response = await api.post('/auth/register', userData);
+      const response = await api.post('/auth/signup', userData);
       return { success: true, ...response.data };
     } catch (error) {
       return { 
