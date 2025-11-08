@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // API Configuration
-const API_BASE_URL = 'https://bug-bounty-management-system-backend.onrender.com/api';
-// const API_BASE_URL = 'http://localhost:3000/api';
+// const API_BASE_URL = 'https://bug-bounty-management-system-backend.onrender.com/api';
+const API_BASE_URL = 'http://localhost:3000/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -111,9 +111,24 @@ export const authAPI = {
     return { success: true, message: 'Logged out successfully' };
   },
 
-  updateProfile: async (userId, updatedData) => {
+  getCurrentUser: async () => {
     try {
-      const response = await api.put(`/auth/profile/${userId}`, updatedData);
+      const response = await api.get('/auth/me');
+      if (response.data.user) {
+        localStorage.setItem('currentUser', JSON.stringify(response.data.user));
+      }
+      return { success: true, ...response.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to get user' 
+      };
+    }
+  },
+
+  updateProfile: async (updatedData) => {
+    try {
+      const response = await api.put('/auth/me', updatedData);
       if (response.data.user) {
         localStorage.setItem('currentUser', JSON.stringify(response.data.user));
       }
@@ -126,9 +141,9 @@ export const authAPI = {
     }
   },
 
-  deleteAccount: async (userId) => {
+  deleteAccount: async () => {
     try {
-      await api.delete(`/auth/user/${userId}`);
+      await api.delete('/auth/me');
       localStorage.removeItem('token');
       localStorage.removeItem('currentUser');
       return { success: true, message: 'Account deleted successfully' };
@@ -292,38 +307,21 @@ export const reportsAPI = {
 
   updateStatus: async (reportId, statusData) => {
     try {
-      // Triage-specific endpoint for reviewing reports
+      // Use the PATCH /reports/:id/review endpoint (no auth required for demo)
       const response = await api.patch(`/reports/${reportId}/review`, statusData);
       return { success: true, report: response.data.report || response.data };
     } catch (error) {
-      // Fallback: try different endpoints
-      console.log('Trying alternate endpoints for report update...');
-      
+      // Fallback: try PUT /reports/:id/status (requires auth)
       try {
-        // Try POST /reports/:id/review
-        const response = await api.post(`/reports/${reportId}/review`, statusData);
+        const response = await api.put(`/reports/${reportId}/status`, statusData);
         return { success: true, report: response.data.report || response.data };
-      } catch (postError) {
-        try {
-          // Try PATCH /reports/:id/status
-          const response = await api.patch(`/reports/${reportId}/status`, statusData);
-          return { success: true, report: response.data.report || response.data };
-        } catch (patchError) {
-          try {
-            // Final fallback: PUT /reports/:id with full report data
-            const response = await api.put(`/reports/${reportId}`, statusData);
-            return { success: true, report: response.data.report || response.data };
-          } catch (putError) {
-            return { 
-              success: false, 
-              message: error.response?.data?.message || 
-                      postError.response?.data?.message || 
-                      patchError.response?.data?.message ||
-                      putError.response?.data?.message || 
-                      'Failed to update status. Please contact administrator for permissions.' 
-            };
-          }
-        }
+      } catch (fallbackError) {
+        return { 
+          success: false, 
+          message: error.response?.data?.message || 
+                  fallbackError.response?.data?.message || 
+                  'Failed to update status' 
+        };
       }
     }
   },
@@ -374,6 +372,89 @@ export const paymentsAPI = {
     } catch (error) {
       console.error('Error fetching payment stats:', error);
       return {};
+    }
+  }
+};
+
+// ===================================
+// Blogs API
+// ===================================
+export const blogsAPI = {
+  getAll: async (params = {}) => {
+    try {
+      const response = await api.get('/blogs', { params });
+      return response.data.blogs || [];
+    } catch (error) {
+      console.error('Error fetching blogs:', error);
+      return [];
+    }
+  },
+
+  getById: async (blogId) => {
+    try {
+      const response = await api.get(`/blogs/${blogId}`);
+      return response.data.blog || null;
+    } catch (error) {
+      console.error('Error fetching blog:', error);
+      return null;
+    }
+  },
+
+  create: async (blogData) => {
+    try {
+      const response = await api.post('/blogs', blogData);
+      return { success: true, blog: response.data.blog };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to create blog' 
+      };
+    }
+  },
+
+  update: async (blogId, blogData) => {
+    try {
+      const response = await api.put(`/blogs/${blogId}`, blogData);
+      return { success: true, blog: response.data.blog };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to update blog' 
+      };
+    }
+  },
+
+  delete: async (blogId) => {
+    try {
+      await api.delete(`/blogs/${blogId}`);
+      return { success: true, message: 'Blog deleted successfully' };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to delete blog' 
+      };
+    }
+  },
+
+  addComment: async (blogId, content) => {
+    try {
+      const response = await api.post(`/blogs/${blogId}/comments`, { content });
+      return { success: true, blog: response.data.blog };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Failed to add comment' 
+      };
+    }
+  },
+
+  getMyBlogs: async () => {
+    try {
+      const response = await api.get('/blogs/user/my-blogs');
+      return response.data.blogs || [];
+    } catch (error) {
+      console.error('Error fetching my blogs:', error);
+      return [];
     }
   }
 };

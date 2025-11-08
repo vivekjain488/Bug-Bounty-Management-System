@@ -38,6 +38,11 @@ import TriageSettings from './pages/TriageSettings';
 import CompanyAnalytics from './pages/CompanyAnalytics';
 import CompanySettings from './pages/CompanySettings';
 
+// Blog routes
+import Blogs from './pages/Blogs';
+import BlogDetail from './pages/BlogDetail';
+import CreateBlog from './pages/CreateBlog';
+
 function App() {
   return (
     <Router>
@@ -71,6 +76,11 @@ function App() {
   <Route path="/pricing" element={<Pricing />} />
   <Route path="/submit-report" element={<SubmitReport />} />
   <Route path="/notifications" element={<Notifications />} />
+        
+        {/* Blog routes */}
+        <Route path="/blogs" element={<Blogs />} />
+        <Route path="/blog/:id" element={<BlogDetail />} />
+        <Route path="/create-blog" element={<CreateBlog />} />
         
         {/* Company dashboard routes */}
         <Route path="/company-dashboard" element={<CompanyDashboard />} />

@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import reportsRoutes from './routes/reports.js';
 import programsRoutes from './routes/programs.js';
+import blogsRoutes from './routes/blogs.js';
 
 // Load environment variables
 dotenv.config();
@@ -35,6 +36,7 @@ app.get('/', (req, res) => {
       auth: '/api/auth',
       reports: '/api/reports',
       programs: '/api/programs',
+      blogs: '/api/blogs',
       health: '/api/health'
     },
     status: 'Server is running'
@@ -45,6 +47,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/programs', programsRoutes);
+app.use('/api/blogs', blogsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
